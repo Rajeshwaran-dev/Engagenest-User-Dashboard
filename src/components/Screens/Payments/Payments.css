@@ -1,0 +1,131 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1040;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.15s linear;
+}
+
+.modal-backdrop.show {
+  opacity: 1;
+}
+
+.payment-modal {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.modal-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+
+.gateway-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 32px 24px;
+  text-align: center;
+  transition: all 0.3s;
+  cursor: pointer;
+  height: 100%;
+}
+
+.gateway-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+  transform: translateY(-2px);
+}
+
+.gateway-logo {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.razorpay-logo {
+  background: #eff6ff;
+}
+
+.payu-logo {
+  background: #ecfdf5;
+}
+
+.gateway-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 16px;
+}
+
+.btn-configure {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 28px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s;
+  width: 100%;
+}
+
+.btn-configure:hover {
+  background: var(--primary);
+}
+
+.btn-cancel {
+  background: white;
+  color: #374151;
+  border: 1px solid var(--text-secondary);
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-cancel:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.btn-create-disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .modal-dialog {
+    margin: 10px;
+  }
+
+  .gateway-card {
+    margin-bottom: 16px;
+  }
+}
