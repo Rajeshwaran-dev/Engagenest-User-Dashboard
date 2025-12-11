@@ -110,7 +110,7 @@ const ApiLogs = () => {
   const handleDateChange = ({ startDate, endDate }) => {
     const newStartDate = moment(startDate).format('YYYY-MM-DD');
     const newEndDate = moment(endDate).format('YYYY-MM-DD');
-    
+
     setSelectedDateRange({
       startDate: newStartDate,
       endDate: newEndDate
@@ -624,22 +624,21 @@ const ApiLogs = () => {
             <>
               <div className="table-responsive position-relative">
                 <table className="table bordered-table mb-0">
+                  {/* In the main table view section (around line 340) */}
                   <thead>
                     <tr>
                       <th scope="col">
                         <div className="form-check style-check d-flex align-items-center">
-                          <label className="form-check-label">S.No.</label>
+                          <label className="form-check-label">S.No</label>
                         </div>
                       </th>
-                      <th scope="col">Campaign ID / ERP Type</th>
-                      <th scope="col">Published Time</th>
-                      <th scope="col">Target Users</th>
-                      <th scope="col">Failed</th>
+                      <th scope="col">Campaign Name</th> {/* Changed from "Campaign ID / ERP Type" */}
+                      <th scope="col">Submitted</th> {/* Changed from "Target Users" */}
+                      <th scope="col">Failed Users</th> {/* Changed from "Failed" */}
                       <th scope="col">Sent</th>
                       <th scope="col">Delivered</th>
                       <th scope="col">Read</th>
-                      <th scope="col">Pending</th>
-                      <th scope="col">Error</th>
+                      <th scope="col">Status</th> {/* Changed from "Error" */}
                     </tr>
                   </thead>
                   <tbody>
@@ -655,18 +654,18 @@ const ApiLogs = () => {
                           </div>
                         </td>
                         <td className="fw-bold text-primary-2">
-                          {campaign._id?.campaignId || campaign._id?.erpType || 'N/A'}
+                          {campaign._id?.campaignId || campaign._id?.erpType || campaign.name || 'N/A'} {/* Added campaign.name */}
                         </td>
-                        <td>
-                          {moment(campaign.publishedTime).format('DD/MM/YYYY hh:mm A')}
-                        </td>
-                        <td>{campaign.tagetUsers || 0}</td>
+                        <td>{campaign.tagetUsers || campaign.submitted || 0}</td> {/* Added submitted */}
                         <td>{campaign.failed || 0}</td>
                         <td>{campaign.sent || 0}</td>
                         <td>{campaign.delivered || 0}</td>
                         <td>{campaign.read || 0}</td>
-                        <td>{campaign.pending || 0}</td>
-                        <td>{campaign.error || 0}</td>
+                        <td>
+                          <span className="badge text-sm fw-semibold px-20 py-9 radius-4 text-white bg-success">
+                            {campaign.status || 'Completed'} {/* Added status column */}
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

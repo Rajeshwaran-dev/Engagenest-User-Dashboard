@@ -36,7 +36,7 @@ const UseTemplateModal = ({ onClose, onTemplateSelect, messageType = "single" })
     {
       id: 3,
       name: "Education_Course_Promo",
-      category: "Education",
+      category: "Marketing",
       type: "image",
       description: "Master Python Programming with Our Comprehensive Course. Enroll now and get certified!",
       preview: "image",
@@ -71,7 +71,7 @@ const UseTemplateModal = ({ onClose, onTemplateSelect, messageType = "single" })
     {
       id: 6,
       name: "Tutorial_Guide",
-      category: "Education",
+      category: "Authentication",
       type: "video",
       description: "Learn how to master {{SkillName}} with our step-by-step video tutorial. Perfect for beginners!",
       preview: "video",
@@ -83,7 +83,7 @@ const UseTemplateModal = ({ onClose, onTemplateSelect, messageType = "single" })
     {
       id: 7,
       name: "Monthly_Report",
-      category: "Corporate",
+      category: "Utility",
       type: "document",
       description: "Your monthly performance report for {{Month}} is ready. Check your progress and insights.",
       preview: "document",
@@ -94,7 +94,7 @@ const UseTemplateModal = ({ onClose, onTemplateSelect, messageType = "single" })
     {
       id: 8,
       name: "Ebook_Download",
-      category: "Education",
+      category: "Marketing",
       type: "document",
       description: "Download your free ebook: '{{EbookTitle}}'. Packed with valuable insights and tips.",
       preview: "document",
@@ -146,14 +146,14 @@ const UseTemplateModal = ({ onClose, onTemplateSelect, messageType = "single" })
     const matchesCategory =
       selectedCategory === "all" || template.category === selectedCategory;
 
-    // Filter by template type (text/image/video/document)
+    // Filter by template type (text/image/video/document/carousel)
     const matchesType =
       selectedType === "all" || template.type === selectedType;
 
     return matchesSearch && matchesCategory && matchesType;
   });
 
-  const categories = ["all", ...new Set(templates.map((t) => t.category))];
+  const categories = ["all", "Marketing", "Utility", "Authentication"];
   const types = ["all", "text", "image", "video", "document", "carousel"];
 
   const handleSelectTemplate = (template) => {
@@ -228,6 +228,21 @@ const UseTemplateModal = ({ onClose, onTemplateSelect, messageType = "single" })
         </div>
 
         <div className="modal-body template-gallery-body">
+          {/* Category Filter - Marketing, Utility, Authentication */}
+          <div className="template-category-filter" style={{ marginBottom: "20px" }}>
+            <div className="category-buttons">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  className={`category-btn ${selectedCategory === category ? "active" : ""}`}
+                  onClick={() => setSelectedCategory(category)}
+                >
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Search and Filter Section */}
           <div className="template-gallery-filters">
             <div className="template-search-container">

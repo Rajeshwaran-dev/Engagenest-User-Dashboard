@@ -13,6 +13,7 @@ import { useSnackbar } from "notistack";
 import UseTemplateModal from "../Modules/UseTemplateModal";
 import PreviewMessageModal from "../Modules/PreviewMessageModal";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import DateTimePicker from "../../Calendar/DateTimePicker";
 
 const CSV = ({
   formData,
@@ -674,7 +675,7 @@ const CSV = ({
           {/* LEFT COLUMN */}
           <Col lg={6} md={12} sm={12}>
             <Form.Group className="mb-4">
-              <Form.Label className="fw-semibold color-change mb-3">
+              <Form.Label className="fw-semibold color-change">
                 Message Content
               </Form.Label>
               <Form.Control
@@ -703,7 +704,7 @@ const CSV = ({
             {/* File Upload Section - Only shown for templates that support files AND are NOT carousel */}
             {showUploadSection && (
               <Form.Group className="mb-4">
-                <Form.Label className="fw-semibold color-change mb-3">
+                <Form.Label className="fw-semibold color-change">
                   Attach File to Message
                 </Form.Label>
                 <div className="file-upload-section">
@@ -818,7 +819,7 @@ const CSV = ({
             {formData?.templateType === "carousel" &&
               templateVariables.length > 0 && (
                 <Form.Group className="mb-4">
-                  <Form.Label className="fw-semibold color-change mb-3 d-flex justify-content-between align-items-center">
+                  <Form.Label className="fw-semibold color-change d-flex justify-content-between align-items-center">
                     <span>
                       Carousel Media Upload (
                       {carouselMediaType || "image/video"})
@@ -963,7 +964,7 @@ const CSV = ({
             {templateVariables.length > 0 &&
               formData?.templateType !== "carousel" && (
                 <Form.Group className="mb-4">
-                  <Form.Label className="fw-semibold color-change mb-3">
+                  <Form.Label className="fw-semibold color-change">
                     Map CSV Columns to Variables
                   </Form.Label>
                   <div className="variable-mapping-section border rounded p-3">
@@ -1008,7 +1009,7 @@ const CSV = ({
             <Row className="g-3">
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label className="fw-semibold color-change mb-3">
+                  <Form.Label className="fw-semibold color-change">
                     Campaign Name
                   </Form.Label>
                   <Form.Control
@@ -1025,7 +1026,7 @@ const CSV = ({
 
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label className="fw-semibold color-change mb-3">
+                  <Form.Label className="fw-semibold color-change">
                     Select Type
                   </Form.Label>
                   <Form.Select
@@ -1046,7 +1047,7 @@ const CSV = ({
               <Row className="g-3 mt-1">
                 <Col md={6}>
                   <Form.Group>
-                    <Form.Label className="fw-semibold color-change mb-3">
+                    <Form.Label className="fw-semibold color-change">
                       Select Timezone
                     </Form.Label>
                     <Form.Select
@@ -1066,17 +1067,17 @@ const CSV = ({
                 </Col>
 
                 <Col md={6}>
-                  <Form.Group>
-                    <Form.Label className="fw-semibold color-change mb-3">
+                  <Form.Group className="mb-3">
+                    <Form.Label className="fw-semibold color-change mb-2">
                       Date and Time
                     </Form.Label>
-                    <Form.Control
-                      type="datetime-local"
-                      name="scheduledDateTime"
-                      value={formData?.scheduledDateTime || ""}
-                      onChange={handleChange}
-                      className="py-2"
-                      style={{ borderColor: "#e0e0e0", borderRadius: "10px" }}
+                    <DateTimePicker
+                      onDateTimeChange={({ date, time, datetime }) => {
+                        console.log("Selected date:", date);
+                        console.log("Selected time:", time);
+                        console.log("Combined datetime:", datetime);
+                      }}
+                      placeholder="Select date and time"
                     />
                   </Form.Group>
                 </Col>
@@ -1087,7 +1088,7 @@ const CSV = ({
           {/* RIGHT COLUMN */}
           <Col lg={6} md={12} sm={12}>
             <Form.Group className="mb-3">
-              <Form.Label className="fw-semibold color-change mb-3">
+              <Form.Label className="fw-semibold color-change">
                 Upload CSV only, Max file size : 32 MB
               </Form.Label>
               <Form.Control
@@ -1124,7 +1125,7 @@ const CSV = ({
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label className="fw-semibold color-change mb-3">
+              <Form.Label className="fw-semibold color-change">
                 Country Code
               </Form.Label>
               <Form.Select
@@ -1139,7 +1140,7 @@ const CSV = ({
             </Form.Group>
 
             <Form.Group>
-              <Form.Label className="fw-semibold color-change mb-3">
+              <Form.Label className="fw-semibold color-change">
                 Mobile Number
               </Form.Label>
               <Form.Control

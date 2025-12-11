@@ -26,7 +26,7 @@ const BroadcastLogs = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [detailCurrentPage, setDetailCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  
+
   const [pagination, setPagination] = useState({
     ofset: 0,
     limit: 10,
@@ -86,7 +86,7 @@ const BroadcastLogs = () => {
 
       // Exclude scheduled campaigns (from old code)
       const isNotInSchedules = !scheduledCampaignIds.includes(campaign._id);
-      
+
       // Exclude API campaigns (from old code logic: no method = broadcast)
       const isNotApiCampaign = !campaign.method;
 
@@ -169,7 +169,7 @@ const BroadcastLogs = () => {
   const handleDateChange = ({ startDate, endDate }) => {
     const newStartDate = moment(startDate).format('YYYY-MM-DD');
     const newEndDate = moment(endDate).format('YYYY-MM-DD');
-    
+
     setSelectedDateRange({
       startDate: newStartDate,
       endDate: newEndDate
@@ -227,7 +227,7 @@ const BroadcastLogs = () => {
     try {
       const url = `${process.env.REACT_APP_API_URL}users/globalcampaignreport`;
       const loginDetails = JSON.parse(localStorage.getItem("loginData"));
-      
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -709,18 +709,19 @@ const BroadcastLogs = () => {
                     <tr>
                       <th scope="col">
                         <div className="form-check style-check d-flex align-items-center">
-                          <label className="form-check-label">S.No.</label>
+                          <label className="form-check-label">S.No</label>
                         </div>
                       </th>
-                      <th scope="col">Campaign ID</th>
+                      <th scope="col">Campaign Name</th> {/* Changed from "Campaign ID" */}
                       <th scope="col">Published Time</th>
-                      <th scope="col">Target Users</th>
-                      <th scope="col">Failed</th>
+                      <th scope="col">Submitted</th> {/* Changed from "Target Users" */}
+                      <th scope="col">Failed Users</th> {/* Changed from "Failed" */}
                       <th scope="col">Sent</th>
                       <th scope="col">Delivered</th>
                       <th scope="col">Read</th>
-                      <th scope="col">Pending</th>
-                      <th scope="col">Error</th>
+                      <th scope="col">Replied</th> {/* Changed from "Pending" */}
+                      <th scope="col">Status</th> {/* Changed from "Error" */}
+                      <th scope="col">Trigger</th> {/* Added Trigger column */}
                     </tr>
                   </thead>
                   <tbody>
@@ -736,18 +737,25 @@ const BroadcastLogs = () => {
                           </div>
                         </td>
                         <td className="fw-bold text-primary-2">
-                          {campaign._id}
+                          {campaign.name || campaign._id || 'N/A'} {/* Added campaign.name */}
                         </td>
                         <td>
                           {moment(campaign.publishedTime).format('DD/MM/YYYY hh:mm A')}
                         </td>
-                        <td>{campaign.tagetUsers || 0}</td>
+                        <td>{campaign.tagetUsers || campaign.submitted || 0}</td> {/* Added submitted */}
                         <td>{campaign.failed || 0}</td>
                         <td>{campaign.sent || 0}</td>
                         <td>{campaign.delivered || 0}</td>
                         <td>{campaign.read || 0}</td>
-                        <td>{campaign.pending || 0}</td>
-                        <td>{campaign.error || 0}</td>
+                        <td>{campaign.replied || 0}</td> {/* Changed from pending to replied */}
+                        <td>
+                          <span className="badge text-sm fw-semibold px-20 py-9 radius-4 text-white bg-success">
+                            {campaign.status || 'Completed'} {/* Added status column */}
+                          </span>
+                        </td>
+                        <td>
+                          {campaign.trigger || '-'} {/* Added trigger column */}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

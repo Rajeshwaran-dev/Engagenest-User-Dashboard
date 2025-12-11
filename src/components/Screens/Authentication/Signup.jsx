@@ -1,87 +1,226 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import CryptoJS from 'crypto-js';
+import { useDispatch } from 'react-redux';
+import { useSnackbar } from 'notistack';
+import {
+  UserApisV2,
+  useSendOtpMutation,
+  useUserLoginMutation,
+  useUserRegisterMutation,
+  useVerifyOtpMutation,
+} from '../../../store/ApiFilesV2/UserApis';
+import { extractSubdomainAndDomain } from '../../../CommonFunctions/CommonConfigs';
+import { useGetAllCountriesQuery } from '../../../store/ApiFilesV2/GeneralApis';
+import countryCodeLengthMap from '../../../hook/countryCode';
+
+const encryptPassword = password => {
+  const key = CryptoJS.enc.Hex.parse("cfcb0fd1dd478961a560c9fba47cca35");
+  const iv = CryptoJS.enc.Hex.parse("bf396b5dad931e9e192d414fa40a7154");
+
+  const encrypted = CryptoJS.AES.encrypt(password, key, {
+    iv: iv,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7,
+  });
+
+  return encrypted.ciphertext.toString(CryptoJS.enc.Hex);
+};
+
+// OTP Input Component (using the improved logic from otp.jsx)
+const OtpInput = ({ length = 6, value = "", onChange, disabled }) => {
+  const [otp, setOtp] = useState(Array(length).fill(""));
+  const inputRefs = useRef([]);
+
+  // Initialize refs array
+  useEffect(() => {
+    inputRefs.current = inputRefs.current.slice(0, length);
+  }, [length]);
+
+  // Update component state when parent value changes
+  useEffect(() => {
+    if (value) {
+      const otpArray = value.split("").slice(0, length);
+      setOtp([...otpArray, ...Array(length - otpArray.length).fill("")]);
+    } else {
+      setOtp(Array(length).fill(""));
+    }
+  }, [value, length]);
+
+  const handleChange = (e, index) => {
+    const newVal = e.target.value;
+
+    // Only allow numbers
+    if (!/^\d*$/.test(newVal)) return;
+
+    // Take only the last character if multiple characters are pasted
+    const digit = newVal.slice(-1);
+
+    // Create copy of current OTP state
+    const newOtp = [...otp];
+    newOtp[index] = digit;
+    setOtp(newOtp);
+
+    // Call parent onChange with concatenated string
+    const otpValue = newOtp.join("");
+    onChange(otpValue);
+
+    // Auto-focus next input if there's a value and not the last input
+    if (digit && index < length - 1) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (e, index) => {
+    // Move focus to previous input on backspace if current input is empty
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handlePaste = e => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text/plain").trim();
+
+    // Check if pasted content is numeric only
+    if (!/^\d+$/.test(pastedData)) return;
+
+    // Create a new OTP array with pasted data
+    const pastedOtp = Array(length).fill("");
+    for (let i = 0; i < Math.min(pastedData.length, length); i++) {
+      pastedOtp[i] = pastedData[i];
+    }
+
+    setOtp(pastedOtp);
+    onChange(pastedOtp.join(""));
+
+    // Focus last filled input or the next empty one
+    const lastIndex = Math.min(pastedData.length, length) - 1;
+    if (lastIndex >= 0) {
+      inputRefs.current[lastIndex]?.focus();
+    }
+  };
+
+  return (
+    <div className='d-flex justify-content-center gap-2 mb-4'>
+      {Array(length)
+        .fill(null)
+        .map((_, index) => (
+          <input
+            key={index}
+            ref={ref => (inputRefs.current[index] = ref)}
+            type='text'
+            inputMode='numeric'
+            maxLength={1}
+            value={otp[index]}
+            onChange={e => handleChange(e, index)}
+            onKeyDown={e => handleKeyDown(e, index)}
+            onPaste={index === 0 ? handlePaste : null}
+            className='form-control text-center fw-bold otp-input'
+            style={{ width: "50px", height: "50px", fontSize: "1.25rem" }}
+            disabled={disabled}
+            autoComplete='off'
+          />
+        ))}
+    </div>
+  );
+};
 
 const Signup = () => {
-  // Get environment variables with fallbacks
-  const SUPER_ADMIN_DOMAIN = 'engagenest.com'; // Replace with your actual domain
-  const API_BASE_URL = 'http://localhost:8001/v1/';
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { enqueueSnackbar } = useSnackbar();
+
+  const [userRegister] = useUserRegisterMutation();
+  const [sendOtp] = useSendOtpMutation();
+  const [verifyOtp] = useVerifyOtpMutation();
+  const [userLogin] = useUserLoginMutation();
+  const { data: countryCodeData } = useGetAllCountriesQuery();
 
   const [formData, setFormData] = useState({
     companyName: '',
     username: '',
-    contactNumber: '',
+    countryCode: '+91', // Default to India
+    mobileNumber: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    domain: SUPER_ADMIN_DOMAIN
+    confirmPassword: ''
   });
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // OTP States
   const [showOtpModal, setShowOtpModal] = useState(false);
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [otpExpiry, setOtpExpiry] = useState(null);
+  const [otp, setOtp] = useState('');
+  const [otpDisabled, setOtpDisabled] = useState(false);
+  const [otpExpiryDate, setOtpExpiryDate] = useState(null);
 
-  const navigate = useNavigate();
+  const filterOption = (input, option) =>
+    (option?.label ?? "").toLowerCase().includes(input.toLowerCase());
 
-  const encryptPassword = password => {
-    const key = CryptoJS.enc.Hex.parse("cfcb0fd1dd478961a560c9fba47cca35");
-    const iv = CryptoJS.enc.Hex.parse("bf396b5dad931e9e192d414fa40a7154");
+  const getSortedCountryOptions = countryData => {
+    if (!countryData?.data) return [];
 
-    const encrypted = CryptoJS.AES.encrypt(password, key, {
-      iv: iv,
-      mode: CryptoJS.mode.CBC,
-      padding: CryptoJS.pad.Pkcs7,
-    });
+    const indiaOption = countryData.data.find(item => item.name === "India");
+    const otherCountries = countryData.data.filter(
+      item => item.name !== "India"
+    );
 
-    return encrypted.ciphertext.toString(CryptoJS.enc.Hex);
+    const sortedCountries = otherCountries.sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+
+    const allCountries = indiaOption
+      ? [indiaOption, ...sortedCountries]
+      : sortedCountries;
+
+    return allCountries.map(item => ({
+      label: `+${item.dial_code} ${item.name}`,
+      value: item.dial_code,
+    }));
   };
 
-  const extractSubdomainAndDomain = () => {
-    const hostname = window.location.hostname;
-    const parts = hostname.split('.');
+  useEffect(() => {
+    setFormData(prevState => ({
+      ...prevState,
+      mobileNumber: "",
+    }));
+  }, [formData.countryCode]);
 
-    if (parts.length >= 2) {
-      if (parts[0] === 'localhost' || parts[0] === '127.0.0.1') {
-        return {
-          domain: 'localhost',
-          siteUrl: 'waba-panel.engagenest.com'
-        };
-      }
-
-      // Handle specific domains like old code
-      const siteUrl = hostname;
-      if (siteUrl === 'my.askeva.io' ||
-        siteUrl === 'whatsapp.askeva.io' ||
-        siteUrl === 'app.askeva.net') {
-        return {
-          domain: siteUrl,
-          siteUrl: 'app.askeva.io'
-        };
-      }
-
-      return {
-        domain: parts.slice(-2).join('.'),
-        siteUrl: siteUrl
-      };
-    }
-    return { domain: hostname, siteUrl: hostname };
+  const getDomainConfig = () => {
+    const domain = extractSubdomainAndDomain();
+    return domain?.domain === "localhost"
+      ? "waba-panel.engagenest.com"
+      : domain?.siteUrl === "my.askeva.io"
+        ? "app.askeva.io"
+        : domain?.siteUrl === "whatsapp.askeva.io"
+          ? "app.askeva.io"
+          : domain?.siteUrl === "app.askeva.net"
+            ? "app.askeva.io"
+            : domain?.siteUrl
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
+
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
+  };
+
+  const handleCountryCodeChange = (value) => {
+    setFormData(prev => ({
+      ...prev,
+      countryCode: value,
+      mobileNumber: "", // Reset mobile number
+    }));
   };
 
   const validateForm = () => {
@@ -95,22 +234,36 @@ const Signup = () => {
       newErrors.username = 'Username is required';
     }
 
-    if (!formData.contactNumber.trim()) {
-      newErrors.contactNumber = 'Contact Number is required';
-    } else if (!/^\d{10}$/.test(formData.contactNumber)) {
-      newErrors.contactNumber = 'Please enter a valid 10-digit number';
+    if (!formData.countryCode) {
+      newErrors.countryCode = 'Country Code is required';
+    }
+
+    if (!formData.mobileNumber.trim()) {
+      newErrors.mobileNumber = 'Contact Number is required';
+    } else {
+      const countryCode = formData.countryCode.replace("+", "");
+      const expectedLength = countryCodeLengthMap[parseInt(countryCode)];
+
+      if (formData.mobileNumber.length !== expectedLength) {
+        newErrors.mobileNumber = `Please enter a valid ${expectedLength} digit phone number for the selected country`;
+      }
     }
 
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    } else if (!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
       newErrors.email = 'Invalid email format';
     }
 
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+    } else {
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+      if (!passwordRegex.test(formData.password)) {
+        newErrors.password = 'Password must contain uppercase, lowercase, number, and special character';
+      }
     }
 
     if (!formData.confirmPassword) {
@@ -123,118 +276,225 @@ const Signup = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const sendOtp = async () => {
-    setLoading(true);
-    try {
-      const domain = extractSubdomainAndDomain();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-      const response = await fetch(`${API_BASE_URL}users/otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contactNumber: formData.contactNumber,
-          domain: domain.siteUrl === 'localhost' ? 'waba-panel.engagenest.com' : domain.siteUrl
-        })
+    if (!validateForm()) {
+      enqueueSnackbar('Please fill all the fields correctly', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
+      return;
+    }
+
+    setLoading(true);
+    setOtp('');
+
+    try {
+      // Extract clean phone number (remove any non-digit characters)
+      const cleanPhoneNumber = formData.mobileNumber.replace(/\D/g, '');
+
+      // Build full international number with country code
+      const fullPhoneNumber = formData.countryCode.startsWith('+')
+        ? formData.countryCode + cleanPhoneNumber
+        : '+' + formData.countryCode + cleanPhoneNumber;
+
+      console.log('Sending OTP to:', fullPhoneNumber);
+      console.log('Email:', formData.email);
+
+      // Send OTP for REGISTRATION (both email and contactNumber provided)
+      const sendOtpResult = await sendOtp({
+        domain: getDomainConfig(),
+        contactNumber: fullPhoneNumber,  // This tells backend it's registration
+        email: formData.email,            // This is for duplicate check
       });
 
-      const data = await response.json();
+      if (sendOtpResult?.error) {
+        const errorMsg = sendOtpResult?.error?.data?.msg ||
+          sendOtpResult?.error?.data?.message ||
+          'Failed to send OTP';
 
-      if (response.ok) {
-        setOtpExpiry(data.date);
+        enqueueSnackbar(errorMsg, {
+          variant: 'error',
+          autoHideDuration: 3000,
+        });
+        return;
+      }
+
+      // Store the expiry date when OTP is sent
+      if (sendOtpResult?.data?.date) {
+        setOtpExpiryDate(sendOtpResult.data.date);
+      }
+
+      if (sendOtpResult?.data && sendOtpResult?.data?.error === false) {
+        enqueueSnackbar('OTP Sent successfully!', {
+          variant: 'success',
+          autoHideDuration: 3000,
+        });
         setShowOtpModal(true);
-        alert(`OTP sent to ${formData.contactNumber}. It will expire at ${new Date(data.date).toLocaleTimeString()}`);
-      } else {
-        alert(data.msg || 'Failed to send OTP');
       }
     } catch (error) {
-      alert('Failed to send OTP. Please try again.');
+      console.error('Send OTP Error:', error);
+      enqueueSnackbar('Failed to send OTP. Please try again.', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+  const handleOtpVerification = async () => {
+    const otpString = String(otp);
 
-    // Send OTP before registration
-    await sendOtp();
-  };
-
-  const handleOtpChange = (index, value) => {
-    if (!/^\d*$/.test(value)) return;
-    const newOtp = [...otp];
-    newOtp[index] = value.slice(-1);
-    setOtp(newOtp);
-
-    if (value && index < 5) {
-      document.getElementById(`otp-${index + 1}`)?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      document.getElementById(`otp-${index - 1}`)?.focus();
-    }
-  };
-
-  const verifyOtpAndRegister = async () => {
-    const otpValue = otp.join('');
-
-    if (otpValue.length !== 6) {
-      alert('Please enter complete OTP');
+    if (otpString.length !== 6) {
+      enqueueSnackbar('Please enter complete 6-digit OTP', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
       return;
     }
 
     setLoading(true);
+    setOtpDisabled(true);
+
     try {
-      // First verify OTP
-      const verifyResponse = await fetch(`${API_BASE_URL}users/verifyOtp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contactNumber: formData.contactNumber,
-          otp: otpValue
-        })
+      const cleanPhoneNumber = formData.mobileNumber.replace(/\D/g, '');
+      const fullPhoneNumber = formData.countryCode + cleanPhoneNumber;
+
+      // Verify OTP
+      const otpVerifyRes = await verifyOtp({
+        contactNumber: fullPhoneNumber,
+        otp: otpString,
+        expiryDate: otpExpiryDate,
       });
 
-      const verifyData = await verifyResponse.json();
-
-      if (!verifyResponse.ok) {
-        alert(verifyData.message || 'Invalid OTP');
+      if (otpVerifyRes?.error) {
+        setOtp('');
+        enqueueSnackbar(
+          otpVerifyRes?.error?.data?.message || 'OTP Verification Failed!',
+          {
+            variant: 'error',
+            autoHideDuration: 3000,
+          }
+        );
+        setOtpDisabled(false);
         return;
       }
 
-      // Extract domain
-      const domain = extractSubdomainAndDomain();
-
-      // OTP verified, now register user with encrypted password
-      const encryptedPassword = encryptPassword(formData.password);
-
-      const registerResponse = await fetch(`${API_BASE_URL}users/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      if (otpVerifyRes?.data?.error === false || otpVerifyRes?.data?.message === 'OTP verified') {
+        // Register User
+        const result = await userRegister({
+          domain: getDomainConfig(),
+          email: formData.email,
+          password: encryptPassword(formData.password),
+          contactNumber: fullPhoneNumber,
           companyName: formData.companyName,
           username: formData.username,
-          contactNumber: formData.contactNumber,
+          countryCode: formData.countryCode,
+        });
+
+        if (result.error) {
+          enqueueSnackbar(
+            result?.error?.data?.message || 'Registration failed',
+            {
+              variant: 'error',
+              autoHideDuration: 3000,
+            }
+          );
+          setOtpDisabled(false);
+          return;
+        }
+
+        enqueueSnackbar('User registered successfully!', {
+          variant: 'success',
+          autoHideDuration: 3000,
+        });
+
+        setOtp('');
+        setOtpExpiryDate(null);
+
+        // Auto login after registration
+        const loginRes = await userLogin({
+          domain: getDomainConfig(),
           email: formData.email,
-          password: encryptedPassword, // Use encrypted password
-          domain: domain.siteUrl === 'localhost' ? 'waba-panel.engagenest.com' : domain.siteUrl
-        })
-      });
+          password: formData.password,
+        });
 
-      const registerData = await registerResponse.json();
+        if (loginRes?.error) {
+          enqueueSnackbar(loginRes?.error?.data?.message || 'Login failed', {
+            variant: 'error',
+            autoHideDuration: 3000,
+          });
+          navigate('/');
+          return;
+        }
 
-      if (registerResponse.ok) {
-        alert('Registration successful! Please login.');
-        setShowOtpModal(false);
-        navigate('/');
-      } else {
-        alert(registerData.message || 'Registration failed');
+        if (loginRes?.data?.token) {
+          enqueueSnackbar('Successfully Logged in!', {
+            variant: 'success',
+            autoHideDuration: 3000,
+          });
+          dispatch(UserApisV2.util.invalidateTags(['Role']));
+          localStorage.clear();
+          localStorage.setItem('loginData', JSON.stringify(loginRes?.data));
+          navigate('/dashboard');
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        }
       }
     } catch (error) {
-      alert('Registration failed. Please try again.');
+      enqueueSnackbar(error?.message || 'Something went wrong!', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
+      setOtp('');
+      setOtpDisabled(false);
+    } finally {
+      setLoading(false);
+      setOtpDisabled(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setOtp('');
+    setLoading(true);
+
+    try {
+      const cleanPhoneNumber = formData.mobileNumber.replace(/\D/g, '');
+      const fullPhoneNumber = formData.countryCode + cleanPhoneNumber;
+
+      const sendOtpResult = await sendOtp({
+        domain: getDomainConfig(),
+        contactNumber: fullPhoneNumber,
+        email: formData.email,
+      });
+
+      if (sendOtpResult?.error) {
+        enqueueSnackbar('Failed to resend OTP', {
+          variant: 'error',
+          autoHideDuration: 3000,
+        });
+        return;
+      }
+
+      // Store the expiry date when OTP is resent
+      if (sendOtpResult?.data?.date) {
+        setOtpExpiryDate(sendOtpResult.data.date);
+      }
+
+      if (sendOtpResult?.data) {
+        enqueueSnackbar('OTP resent successfully!', {
+          variant: 'success',
+          autoHideDuration: 3000,
+        });
+      }
+    } catch (error) {
+      enqueueSnackbar('Failed to resend OTP', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
     } finally {
       setLoading(false);
     }
@@ -251,13 +511,10 @@ const Signup = () => {
         <div className="auth-right py-32 px-24 d-flex flex-column justify-content-center">
           <div className="max-w-464-px mx-auto w-100">
             <div className="text-center">
-              <Link to="/" className="w-50">
-                <img src="assets/images/logo.png" alt="" />
+              <Link to="/" >
+                <img className="w-100 h-custom-px" src="assets/images/logo.png" alt="" />
               </Link>
-              <h4 className="mb-12">Sign Up to your Account</h4>
-              <p className="mb-32 text-secondary-light text-lg">
-                Create your account to get started
-              </p>
+              <h5 className="mb-24 mt-8 text-xl text-start">Create, Automate, and Engage 🚀</h5>
             </div>
 
             <form onSubmit={handleSubmit}>
@@ -272,6 +529,7 @@ const Signup = () => {
                   placeholder="Company Name"
                   value={formData.companyName}
                   onChange={handleChange}
+                  maxLength={50}
                 />
               </div>
               {errors.companyName && <div className="text-danger small mb-16">{errors.companyName}</div>}
@@ -284,28 +542,61 @@ const Signup = () => {
                   type="text"
                   name="username"
                   className={`form-control h-56-px bg-neutral-50 radius-12 ${errors.username ? 'border-danger' : ''}`}
-                  placeholder="Username"
+                  placeholder="Primary Contact Name"
                   value={formData.username}
                   onChange={handleChange}
+                  maxLength={50}
                 />
               </div>
               {errors.username && <div className="text-danger small mb-16">{errors.username}</div>}
 
-              <div className="icon-field mb-16">
-                <span className="icon top-50 translate-middle-y">
-                  <Icon icon="ph:phone" />
-                </span>
-                <input
-                  type="tel"
-                  name="contactNumber"
-                  className={`form-control h-56-px bg-neutral-50 radius-12 ${errors.contactNumber ? 'border-danger' : ''}`}
-                  placeholder="Contact Number (10 digits)"
-                  value={formData.contactNumber}
-                  onChange={handleChange}
-                  maxLength="10"
-                />
+              <div className="mb-16">
+                <label className="form-label mb-2">Phone Number</label>
+                <div className="d-flex align-items-center">
+                  <div className="country-code-select" style={{ flexShrink: 0, width: "150px", marginRight: "8px" }}>
+                    <select
+                      value={formData.countryCode}
+                      className={`form-control h-56-px bg-neutral-50 radius-12 ${errors.countryCode ? 'border-danger' : ''}`}
+                      onChange={(e) => handleCountryCodeChange(e.target.value)}
+                      style={{ height: "56px" }}
+                    >
+                      {getSortedCountryOptions(countryCodeData).map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="phone-number-input flex-grow-1">
+                    <div className="icon-field">
+                      <span className="icon top-50 translate-middle-y">
+                        <Icon icon="ph:phone" />
+                      </span>
+                      <input
+                        type="number"
+                        name="mobileNumber"
+                        className={`form-control h-56-px bg-neutral-50 radius-12 ${errors.mobileNumber ? 'border-danger' : ''}`}
+                        placeholder="Enter WhatsApp Number"
+                        value={formData.mobileNumber}
+                        onChange={(e) => {
+                          const inputValue = e.target.value;
+                          const countryCode = formData.countryCode.replace("+", "");
+                          const expectedLength = countryCodeLengthMap[parseInt(countryCode)];
+
+                          // Limit input to expected length
+                          if (inputValue.length <= expectedLength) {
+                            setFormData(prevState => ({
+                              ...prevState,
+                              mobileNumber: inputValue,
+                            }));
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                {errors.mobileNumber && <div className="text-danger small mt-2">{errors.mobileNumber}</div>}
               </div>
-              {errors.contactNumber && <div className="text-danger small mb-16">{errors.contactNumber}</div>}
 
               <div className="icon-field mb-16">
                 <span className="icon top-50 translate-middle-y">
@@ -417,40 +708,33 @@ const Signup = () => {
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h5 className="mb-0">Enter OTP</h5>
               <button className="btn-close" onClick={() => {
+                setOtp('');
+                setOtpExpiryDate(null);
                 setShowOtpModal(false);
-                setOtp(['', '', '', '', '', '']);
               }}>
                 <Icon icon="material-symbols:close-rounded" />
               </button>
             </div>
             <p className="text-secondary-light mb-4">
-              Please enter the 6-digit verification code sent to {formData.contactNumber}
+              Please enter the 6-digit verification code sent to {formData.countryCode} {formData.mobileNumber}
             </p>
-            <div className="d-flex gap-2 justify-content-center mb-4">
-              {otp.map((digit, index) => (
-                <input
-                  key={index}
-                  id={`otp-${index}`}
-                  type="text"
-                  maxLength="1"
-                  className="form-control text-center otp-input"
-                  value={digit}
-                  onChange={(e) => handleOtpChange(index, e.target.value)}
-                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                />
-              ))}
-            </div>
+            <OtpInput
+              length={6}
+              value={otp}
+              onChange={setOtp}
+              disabled={otpDisabled || loading}
+            />
             <button
-              className="btn btn-primary w-100"
-              onClick={verifyOtpAndRegister}
-              disabled={loading}
+              className="btn btn-primary w-100 mb-2"
+              onClick={handleOtpVerification}
+              disabled={loading || otpDisabled || otp.length !== 6}
             >
               {loading ? 'Verifying...' : 'Verify OTP & Register'}
             </button>
             <button
-              className="btn btn-link w-100 mt-2"
-              onClick={sendOtp}
-              disabled={loading}
+              className="btn btn-link w-100"
+              onClick={handleResendOtp}
+              disabled={loading || otpDisabled}
             >
               Resend OTP
             </button>

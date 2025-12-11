@@ -240,19 +240,11 @@ export const UserApisV2 = createApi({
               style: {
                 fontSize: "12px",
               },
-              formatter: function (val) {
-                return Math.floor(val);
-              },
             },
           },
           tooltip: {
             shared: true,
             intersect: false,
-            y: {
-              formatter: function (val) {
-                return val + " messages";
-              },
-            },
           },
         };
 
@@ -394,19 +386,11 @@ export const UserApisV2 = createApi({
               style: {
                 fontSize: "12px",
               },
-              formatter: function (val) {
-                return Math.floor(val);
-              },
             },
           },
           tooltip: {
             shared: true,
             intersect: false,
-            y: {
-              formatter: function (val) {
-                return val + " messages";
-              },
-            },
           },
         };
 

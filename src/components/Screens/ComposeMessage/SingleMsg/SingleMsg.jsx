@@ -733,7 +733,7 @@ const SingleMsg = ({
           {templateVariables.length > 0 &&
             formData?.templateType !== "carousel" && (
               <Form.Group className="mb-4">
-                <Form.Label className="fw-semibold color-change mb-3">
+                <Form.Label className="fw-semibold color-change">
                   Enter Variable Values
                 </Form.Label>
                 <div className="variable-input-section border rounded p-3">

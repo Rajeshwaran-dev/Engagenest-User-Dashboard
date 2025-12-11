@@ -1,369 +1,707 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { useDispatch } from 'react-redux';
+import { useSnackbar } from 'notistack';
 import { setRole } from '../../../store/Slices/authSlice';
+import {
+  UserApisV2,
+  useUserLoginMutation,
+  useVerifyOtpMutation,
+  useSendOtpMutation,
+  useLazyForgetPasswordQuery,
+  useResetPasswordMutation,
+  useVerifySignInOtpMutation,
+} from '../../../store/ApiFilesV2/UserApis';
+import { extractSubdomainAndDomain } from '../../../CommonFunctions/CommonConfigs';
+
+// OTP Input Component (using the improved logic from otp.jsx)
+const OtpInput = ({ length = 6, value = "", onChange, disabled }) => {
+  const [otp, setOtp] = useState(Array(length).fill(""));
+  const inputRefs = useRef([]);
+
+  // Initialize refs array
+  useEffect(() => {
+    inputRefs.current = inputRefs.current.slice(0, length);
+  }, [length]);
+
+  // Update component state when parent value changes
+  useEffect(() => {
+    if (value) {
+      const otpArray = value.split("").slice(0, length);
+      setOtp([...otpArray, ...Array(length - otpArray.length).fill("")]);
+    } else {
+      setOtp(Array(length).fill(""));
+    }
+  }, [value, length]);
+
+  const handleChange = (e, index) => {
+    const newVal = e.target.value;
+
+    // Only allow numbers
+    if (!/^\d*$/.test(newVal)) return;
+
+    // Take only the last character if multiple characters are pasted
+    const digit = newVal.slice(-1);
+
+    // Create copy of current OTP state
+    const newOtp = [...otp];
+    newOtp[index] = digit;
+    setOtp(newOtp);
+
+    // Call parent onChange with concatenated string
+    const otpValue = newOtp.join("");
+    onChange(otpValue);
+
+    // Auto-focus next input if there's a value and not the last input
+    if (digit && index < length - 1) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (e, index) => {
+    // Move focus to previous input on backspace if current input is empty
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handlePaste = e => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text/plain").trim();
+
+    // Check if pasted content is numeric only
+    if (!/^\d+$/.test(pastedData)) return;
+
+    // Create a new OTP array with pasted data
+    const pastedOtp = Array(length).fill("");
+    for (let i = 0; i < Math.min(pastedData.length, length); i++) {
+      pastedOtp[i] = pastedData[i];
+    }
+
+    setOtp(pastedOtp);
+    onChange(pastedOtp.join(""));
+
+    // Focus last filled input or the next empty one
+    const lastIndex = Math.min(pastedData.length, length) - 1;
+    if (lastIndex >= 0) {
+      inputRefs.current[lastIndex]?.focus();
+    }
+  };
+
+  return (
+    <div className='d-flex justify-content-center gap-2 mb-4'>
+      {Array(length)
+        .fill(null)
+        .map((_, index) => (
+          <input
+            key={index}
+            ref={ref => (inputRefs.current[index] = ref)}
+            type='text'
+            inputMode='numeric'
+            maxLength={1}
+            value={otp[index]}
+            onChange={e => handleChange(e, index)}
+            onKeyDown={e => handleKeyDown(e, index)}
+            onPaste={index === 0 ? handlePaste : null}
+            className='form-control text-center fw-bold otp-input'
+            style={{ width: "50px", height: "50px", fontSize: "1.25rem" }}
+            disabled={disabled}
+            autoComplete='off'
+          />
+        ))}
+    </div>
+  );
+};
+
+// Helper function to set login time and first login status
+const setLoginTime = loginResponse => {
+  const currentTime = Date.now();
+  localStorage.setItem("loginTime", currentTime.toString());
+
+  // Store backend response data about password status
+  const userData = loginResponse?.user || loginResponse;
+
+  if (userData?.needsPasswordChange) {
+    localStorage.setItem("needsPasswordChange", "true");
+  } else {
+    localStorage.removeItem("needsPasswordChange");
+  }
+
+  if (userData?.isFirstLogin) {
+    localStorage.setItem("isFirstLogin", "true");
+  } else {
+    localStorage.removeItem("isFirstLogin");
+  }
+
+  // Store the last password change timestamp from backend
+  if (userData?.lastPasswordChange) {
+    localStorage.setItem(
+      "lastPasswordChangeTime",
+      new Date(userData.lastPasswordChange).getTime().toString()
+    );
+  }
+};
 
 const Signin = () => {
-  // Get environment variables with fallbacks
   const dispatch = useDispatch();
-  const SUPER_ADMIN_DOMAIN = 'engagenest.com'; // Replace with your actual domain
-  const API_BASE_URL = 'http://localhost:8001/v1/';
+  const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
 
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    domain: SUPER_ADMIN_DOMAIN,
-    rememberMeFlag: false
-  });
-  const [errors, setErrors] = useState({});
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [rememberMeFlag, setRememberMeFlag] = useState(false);
 
-  // OTP Login States
+  const [userLogin] = useUserLoginMutation();
+  const [verifyOtp] = useVerifyOtpMutation();
+  const [sendOtp] = useSendOtpMutation();
+  const [triggerForgetPassword] = useLazyForgetPasswordQuery();
+  const [resetPassword] = useResetPasswordMutation();
+  const [verifysigninOtp] = useVerifySignInOtpMutation();
+
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
+  const [showForgetMobileModal, setShowForgetMobileModal] = useState(false);
+
   const [otpEmail, setOtpEmail] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [isOtpForLogin, setIsOtpForLogin] = useState(false);
-
-  // Forgot Password States
-  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [purpose, setPurpose] = useState('');
   const [resetPasswords, setResetPasswords] = useState({
     newPassword: '',
     confirmPassword: ''
   });
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [otpDisabled, setOtpDisabled] = useState(false);
+  const [otpExpiryDate, setOtpExpiryDate] = useState(null);
 
-  const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
-    }
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const extractSubdomainAndDomain = () => {
-    const hostname = window.location.hostname;
-    const parts = hostname.split('.');
-
-    if (parts.length >= 2) {
-      if (parts[0] === 'localhost' || parts[0] === '127.0.0.1') {
-        return {
-          domain: 'localhost',
-          siteUrl: 'waba-panel.engagenest.com'
-        };
-      }
-
-      // Handle specific domains like old code
-      const siteUrl = hostname;
-      if (siteUrl === 'my.askeva.io' ||
-        siteUrl === 'whatsapp.askeva.io' ||
-        siteUrl === 'app.askeva.net') {
-        return {
-          domain: siteUrl,
-          siteUrl: 'app.askeva.io'
-        };
-      }
-
-      return {
-        domain: parts.slice(-2).join('.'),
-        siteUrl: siteUrl
-      };
-    }
-    return { domain: hostname, siteUrl: hostname };
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-
-    setLoading(true);
-    try {
-      const domain = extractSubdomainAndDomain();
-
-      const response = await fetch(`${API_BASE_URL}users/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          domain: domain.siteUrl === 'localhost' ? 'waba-panel.engagenest.com' : domain.siteUrl
-        })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('loginData', JSON.stringify({
-          token: data.token,
-          email: data.email,
-          username: data.username,
-          role: data.role,
-          expirationTime: data.expirationTime,
-          roomId: data.roomId,
-          tier: data.tier,
-          connectionStatus: data.connectionStatus,
-          qualityRating: data.qualityRating,
-          plan: data.plan,
-          // Include any other fields from old response
-          ...data
-        }));
-
-        // Dispatch role to Redux store
-        if (data.role) {
-          dispatch(setRole(data.role));
+  useEffect(() => {
+    const userInfo = JSON.parse(localStorage.getItem('loginData'));
+    if (userInfo?.token) {
+      try {
+        const tokenExpiry = userInfo.expirationTime;
+        const currentTime = Math.floor(Date.now() / 1000);
+        if (currentTime > tokenExpiry) {
+          localStorage.removeItem('loginData');
+          navigate('/');
+        } else {
+          navigate('/');
         }
-
-        navigate('/dashboard');
-      } else {
-        setErrors({ submit: data.message || 'Login failed' });
+      } catch (error) {
+        console.log(error.message);
       }
-    } catch (error) {
-      setErrors({ submit: 'Network error. Please try again.' });
-    } finally {
-      setLoading(false);
     }
+  }, [navigate]);
+
+  useEffect(() => {
+    if (showEmailModal) {
+      setEmail('');
+    }
+  }, [showEmailModal]);
+
+  const getDomainConfig = () => {
+    const domain = extractSubdomainAndDomain();
+    return domain?.domain === "localhost"
+      ? "waba-panel.engagenest.com"
+      : domain?.siteUrl === "my.askeva.io"
+        ? "app.askeva.io"
+        : domain?.siteUrl === "whatsapp.askeva.io"
+          ? "app.askeva.io"
+          : domain?.siteUrl === "app.askeva.net"
+            ? "app.askeva.io"
+            : domain?.siteUrl
   };
 
-  // Forgot Password Flow
-  const handleForgotPassword = async () => {
-    if (!otpEmail.trim() || !/\S+@\S+\.\S+/.test(otpEmail)) {
-      alert('Please enter a valid email');
+  const clearOtp = () => {
+    setOtp('');
+  };
+
+  const handleSignin = async (e) => {
+    e.preventDefault();
+
+    if (!email || !password) {
+      enqueueSnackbar('Please fill in both the email and password', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
       return;
     }
 
     setLoading(true);
     try {
-      const response = await fetch(
-        `${API_BASE_URL}users/forget-password?email=${encodeURIComponent(otpEmail)}&domain=${formData.domain}`
-      );
-      const data = await response.json();
+      const loginRes = await userLogin({
+        domain: getDomainConfig(),
+        email: email,
+        password: password,
+        rememberMeFlag,
+      });
 
-      if (response.ok) {
-        setMobileNumber(data.mobileNumber);
-        setShowEmailModal(false);
-        setIsOtpForLogin(false);
-        await sendOtp(data.mobileNumber);
-      } else {
-        alert(data.msg || 'Email not found');
+      if (loginRes?.error) {
+        enqueueSnackbar(loginRes?.error?.data?.message || 'Login failed', {
+          variant: 'error',
+          autoHideDuration: 3000,
+        });
+        return;
+      }
+
+      if (loginRes?.data?.token) {
+        enqueueSnackbar('Successfully Logged in!', {
+          variant: 'success',
+          autoHideDuration: 3000,
+        });
+        dispatch(UserApisV2.util.invalidateTags(['Role']));
+
+        // Set login time and password change status based on backend response
+        setLoginTime(loginRes?.data);
+
+        localStorage.setItem('loginData', JSON.stringify(loginRes?.data));
+        dispatch(setRole(loginRes?.data?.role));
+
+        navigate('/dashboard');
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
       }
     } catch (error) {
-      alert('Failed to verify email');
+      enqueueSnackbar('An unexpected error occurred.', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const sendOtp = async (contactNumber) => {
+  const handleMobilenumber = async (email) => {
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    if (!emailRegex.test(email)) {
+      enqueueSnackbar('Please enter a valid email address', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
+      return;
+    }
+
+    if (email) {
+      setLoading(true);
+      try {
+        const forgetPasswordResult = await triggerForgetPassword({
+          domain: getDomainConfig(),
+          email: email,
+        }).unwrap();
+
+        if (forgetPasswordResult?.mobileNumber) {
+          setMobileNumber(forgetPasswordResult.mobileNumber);
+          setShowEmailModal(false);
+          setShowForgetMobileModal(true);
+        } else if (forgetPasswordResult?.error) {
+          enqueueSnackbar(forgetPasswordResult?.error?.data?.message || 'Email not found', {
+            variant: 'error',
+            autoHideDuration: 3000,
+          });
+          return;
+        }
+      } catch (error) {
+        const errorMessage = error?.data?.msg || error?.data?.message || 'An unexpected error occurred.';
+        enqueueSnackbar(errorMessage, {
+          variant: 'error',
+          autoHideDuration: 3000,
+        });
+        setEmail('');
+        return;
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleSendOtp = async (contactNumber) => {
+    if (!contactNumber) {
+      enqueueSnackbar('Mobile number is missing!', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
+      return;
+    }
+
+    setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}users/otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contactNumber: contactNumber || mobileNumber,
-          domain: formData.domain
-        })
+      // Extract only digits from the mobile number
+      const cleanPhoneNumber = contactNumber.replace(/\D/g, '');
+
+      const sendOtpResult = await sendOtp({
+        domain: getDomainConfig(),
+        contactNumber: cleanPhoneNumber,
+        email: purpose === 'signin' ? otpEmail : undefined,
       });
 
-      const data = await response.json();
-      if (response.ok) {
+      if (sendOtpResult?.error) {
+        enqueueSnackbar(sendOtpResult?.error?.data?.msg || 'Unexpected error occurred', {
+          variant: 'error',
+          autoHideDuration: 3000,
+        });
+        return;
+      }
+
+      // Store the expiry date when OTP is sent
+      if (sendOtpResult?.data?.date) {
+        setOtpExpiryDate(sendOtpResult.data.date);
+      }
+
+      if (sendOtpResult?.data) {
+        enqueueSnackbar('OTP Sent successfully!', {
+          variant: 'success',
+          autoHideDuration: 3000,
+        });
+        clearOtp();
+        setShowForgetMobileModal(false);
         setShowOtpModal(true);
-        alert(`OTP sent successfully! It will expire at ${new Date(data.date).toLocaleTimeString()}`);
-      } else {
-        alert(data.msg || 'Failed to send OTP');
       }
     } catch (error) {
-      alert('Failed to send OTP');
-    }
-  };
-
-  // OTP Login Flow
-  const handleLoginWithOtp = () => {
-    setIsOtpForLogin(true);
-    setShowEmailModal(true);
-  };
-
-  const handleEmailVerification = async () => {
-    if (!otpEmail.trim() || !/\S+@\S+\.\S+/.test(otpEmail)) {
-      alert('Please enter a valid email');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}users/forget-password?email=${encodeURIComponent(otpEmail)}&domain=${formData.domain}`
-      );
-      const data = await response.json();
-
-      if (response.ok) {
-        setMobileNumber(data.mobileNumber);
-        setShowEmailModal(false);
-        await sendOtp(data.mobileNumber);
-      } else {
-        alert(data.msg || 'Email not found');
-      }
-    } catch (error) {
-      alert('Failed to verify email');
+      enqueueSnackbar('Failed to send OTP', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOtpChange = (index, value) => {
-    if (!/^\d*$/.test(value)) return;
-    const newOtp = [...otp];
-    newOtp[index] = value.slice(-1);
-    setOtp(newOtp);
+  const handleVerifyOtp = async (otpValue) => {
+    const otpString = String(otpValue);
 
-    if (value && index < 5) {
-      document.getElementById(`otp-${index + 1}`)?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      document.getElementById(`otp-${index - 1}`)?.focus();
-    }
-  };
-
-  const verifyOtpAndLogin = async () => {
-    const otpValue = otp.join('');
-    if (otpValue.length !== 6) {
-      alert('Please enter complete OTP');
+    if (otpString.length !== 6) {
+      enqueueSnackbar('Please enter a valid 6-digit OTP', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
       return;
     }
 
     setLoading(true);
+    setOtpDisabled(true);
+
     try {
-      const response = await fetch(`${API_BASE_URL}users/verify-signinotp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: otpEmail,
-          domain: formData.domain,
-          otp: otpValue
-        })
+      // Extract only digits from the mobile number
+      const cleanPhoneNumber = mobileNumber.replace(/\D/g, '');
+
+      const otpVerifyRes = await verifyOtp({
+        contactNumber: cleanPhoneNumber,
+        otp: otpString,
+        expiryDate: otpExpiryDate,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('loginData', JSON.stringify({
-          token: data.token,
-          email: data.email,
-          username: data.username,
-          role: data.role,
-          expirationTime: data.expirationTime,
-          roomId: data.roomId,
-          tier: data.tier,
-          connectionStatus: data.connectionStatus,
-          qualityRating: data.qualityRating,
-          plan: data.plan
-        }));
-        setShowOtpModal(false);
-        navigate('/dashboard');
-      } else {
-        alert(data.message || 'Invalid OTP');
+      if (otpVerifyRes?.error) {
+        setOtp('');
+        enqueueSnackbar(
+          otpVerifyRes?.error?.data?.message || 'OTP Verification Failed!',
+          {
+            variant: 'error',
+            autoHideDuration: 3000,
+          }
+        );
+        setOtpDisabled(false);
+        return;
       }
-    } catch (error) {
-      alert('OTP verification failed');
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const verifyOtpForReset = async () => {
-    const otpValue = otp.join('');
-    if (otpValue.length !== 6) {
-      alert('Please enter complete OTP');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await fetch(`${API_BASE_URL}users/verifyOtp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contactNumber: mobileNumber,
-          otp: otpValue
-        })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
+      if (otpVerifyRes?.data?.message === 'OTP verified' || otpVerifyRes?.data?.error === false) {
+        enqueueSnackbar('OTP Verified Successfully!', {
+          variant: 'success',
+          autoHideDuration: 3000,
+        });
+        setOtp('');
         setShowOtpModal(false);
         setShowResetPasswordModal(true);
-        alert('OTP verified successfully!');
-      } else {
-        alert(data.message || 'Invalid OTP');
+        setOtpExpiryDate(null);
       }
     } catch (error) {
-      alert('OTP verification failed');
+      setOtp('');
+      enqueueSnackbar(error?.message || 'Something Went Wrong!', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
+      setOtpDisabled(false);
     } finally {
       setLoading(false);
+      setOtpDisabled(false);
     }
   };
 
-  const handleResetPassword = async () => {
-    if (!resetPasswords.newPassword || resetPasswords.newPassword.length < 6) {
-      alert('Password must be at least 6 characters');
+  const handleVerifySigninOtp = async (otpValue, email) => {
+    const otpString = String(otpValue);
+
+    if (otpString.length !== 6) {
+      enqueueSnackbar('Please enter a valid 6-digit OTP', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
+      setOtp('');
       return;
     }
-    if (resetPasswords.newPassword !== resetPasswords.confirmPassword) {
-      alert('Passwords do not match');
+
+    if (!email) {
+      enqueueSnackbar('Email is required', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
+      return;
+    }
+
+    setLoading(true);
+    setOtpDisabled(true);
+
+    try {
+      const verifySigninOtpResult = await verifysigninOtp({
+        domain: getDomainConfig(),
+        email: email,
+        otp: otpString,
+        expiryDate: otpExpiryDate,
+      });
+
+      if (verifySigninOtpResult?.error) {
+        enqueueSnackbar(
+          verifySigninOtpResult?.error?.data?.message ||
+          'OTP Verification Failed!',
+          {
+            variant: 'error',
+            autoHideDuration: 3000,
+          }
+        );
+
+        if (verifySigninOtpResult?.error?.data?.clearOtp) {
+          setOtp('');
+        }
+        setOtpDisabled(false);
+        return;
+      }
+
+      if (verifySigninOtpResult?.data?.message === 'OTP verified successfully!' || verifySigninOtpResult?.data?.error === false) {
+        enqueueSnackbar('OTP Verified Successfully!', {
+          variant: 'success',
+          autoHideDuration: 3000,
+        });
+
+        setLoginTime(verifySigninOtpResult?.data);
+
+        setOtp('');
+        setEmail('');
+        setShowOtpModal(false);
+        setOtpExpiryDate(null);
+
+        localStorage.setItem(
+          'loginData',
+          JSON.stringify(verifySigninOtpResult?.data)
+        );
+        dispatch(setRole(verifySigninOtpResult?.data?.role));
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      enqueueSnackbar(error?.message || 'Something Went Wrong!', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
+      setOtp('');
+      setOtpDisabled(false);
+    } finally {
+      setLoading(false);
+      setOtpDisabled(false);
+    }
+  };
+
+  const handleLoginWithOtpSubmit = async () => {
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    if (!emailRegex.test(otpEmail)) {
+      enqueueSnackbar('Please enter a valid email address', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
       return;
     }
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}users/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: otpEmail,
-          password: resetPasswords.newPassword,
-          reenteredPassword: resetPasswords.confirmPassword,
-          domain: formData.domain
-        })
+      // Send OTP request with email for login
+      const sendOtpResult = await sendOtp({
+        domain: getDomainConfig(),
+        email: otpEmail, // Include email for login with OTP
       });
 
-      const data = await response.json();
+      if (sendOtpResult?.error) {
+        enqueueSnackbar(
+          sendOtpResult?.error?.data?.msg || 'Failed to send OTP',
+          {
+            variant: 'error',
+            autoHideDuration: 3000,
+          }
+        );
+        return;
+      }
 
-      if (response.ok) {
-        alert('Password reset successful! Please login.');
+      // Store the expiry date when OTP is sent
+      if (sendOtpResult?.data?.date) {
+        setOtpExpiryDate(sendOtpResult.data.date);
+      }
+
+      if (sendOtpResult?.data) {
+        enqueueSnackbar('OTP sent successfully!', {
+          variant: 'success',
+          autoHideDuration: 3000,
+        });
+        setShowEmailModal(false);
+        setShowOtpModal(true);
+        // Don't need to set mobile number manually as backend handles it
+      }
+    } catch (error) {
+      enqueueSnackbar('Failed to send OTP', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetpassword = async () => {
+    if (!resetPasswords.newPassword || !resetPasswords.confirmPassword) {
+      enqueueSnackbar('Missing required fields!', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
+      return;
+    }
+
+    if (resetPasswords.newPassword !== resetPasswords.confirmPassword) {
+      enqueueSnackbar('Passwords do not match!', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
+      return;
+    }
+
+    if (resetPasswords.newPassword.length < 8) {
+      enqueueSnackbar('Password must be at least 8 characters long.', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
+      return;
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+    if (!passwordRegex.test(resetPasswords.newPassword)) {
+      enqueueSnackbar(
+        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+        {
+          variant: 'error',
+          autoHideDuration: 3000,
+        }
+      );
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const resetPasswordRes = await resetPassword({
+        domain: getDomainConfig(),
+        email: otpEmail,
+        password: resetPasswords.newPassword,
+        reenteredPassword: resetPasswords.confirmPassword,
+      });
+
+      if (resetPasswordRes?.error) {
+        const errorMessage = resetPasswordRes?.error?.data?.message || 'An unexpected error occurred.';
+        enqueueSnackbar(errorMessage, {
+          variant: 'error',
+          autoHideDuration: 3000,
+        });
+        return;
+      }
+
+      if (resetPasswordRes?.data) {
+        enqueueSnackbar(resetPasswordRes.data.msg || 'Password reset successfully!', {
+          variant: 'success',
+          autoHideDuration: 3000,
+        });
         setShowResetPasswordModal(false);
         setOtpEmail('');
         setResetPasswords({ newPassword: '', confirmPassword: '' });
-        setOtp(['', '', '', '', '', '']);
-      } else {
-        alert(data.msg || 'Password reset failed');
       }
     } catch (error) {
-      alert('Password reset failed');
+      enqueueSnackbar(error?.message || 'Something Went Wrong!', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOtpVerification = () => {
+    if (!otp || otp.length !== 6) {
+      enqueueSnackbar('Please enter a valid 6-digit OTP', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
+      return;
+    }
+
+    if (purpose === 'reset-password') {
+      handleVerifyOtp(otp);
+    } else if (purpose === 'signin') {
+      handleVerifySigninOtp(otp, otpEmail);
+    }
+  };
+
+  const handleLoginWithOtp = () => {
+    setPurpose('signin');
+    setShowEmailModal(true);
+  };
+
+  const handleForgetEmail = () => {
+    setPurpose('reset-password');
+    setShowEmailModal(true);
+  };
+
+  const handleResendOtp = async () => {
+    setOtp('');
+    setLoading(true);
+
+    try {
+      const cleanPhoneNumber = mobileNumber.replace(/\D/g, '');
+
+      const sendOtpResult = await sendOtp({
+        domain: getDomainConfig(),
+        contactNumber: cleanPhoneNumber,
+        email: purpose === 'signin' ? otpEmail : undefined,
+      });
+
+      if (sendOtpResult?.error) {
+        enqueueSnackbar('Failed to resend OTP', {
+          variant: 'error',
+          autoHideDuration: 3000,
+        });
+        return;
+      }
+
+      // Store the expiry date when OTP is resent
+      if (sendOtpResult?.data?.date) {
+        setOtpExpiryDate(sendOtpResult.data.date);
+      }
+
+      if (sendOtpResult?.data) {
+        enqueueSnackbar('OTP resent successfully!', {
+          variant: 'success',
+          autoHideDuration: 3000,
+        });
+      }
+    } catch (error) {
+      enqueueSnackbar('Failed to resend OTP', {
+        variant: 'error',
+        autoHideDuration: 3000,
+      });
     } finally {
       setLoading(false);
     }
@@ -380,16 +718,13 @@ const Signin = () => {
         <div className="auth-right py-32 px-24 d-flex flex-column justify-content-center bg-white">
           <div className="max-w-464-px mx-auto w-100">
             <div className="text-center">
-              <Link to="/" className="w-50">
-                <img src="assets/images/logo.png" alt="" />
+              <Link to="/" >
+                <img className="w-100 h-custom-px" src="assets/images/logo.png" alt="" />
               </Link>
-              <h4 className="mb-12">Welcome! 👋</h4>
-              <p className="mb-32 text-secondary-light text-lg">
-                Welcome back! please enter your detail
-              </p>
+              <h5 className="mb-24 mt-8 text-xl text-start">Welcome Back! 👋</h5>
             </div>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSignin}>
               <div className="icon-field mb-16">
                 <span className="icon top-50 translate-middle-y">
                   <Icon icon="mage:email" />
@@ -397,13 +732,13 @@ const Signin = () => {
                 <input
                   type="email"
                   name="email"
-                  className={`form-control h-56-px bg-neutral-50 radius-12 ${errors.email ? 'border-danger' : ''}`}
+                  className="form-control h-56-px bg-neutral-50 radius-12"
                   placeholder="Enter Your Email ID"
-                  value={formData.email}
-                  onChange={handleChange}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
-              {errors.email && <div className="text-danger small mb-16">{errors.email}</div>}
 
               <div className="position-relative mb-20">
                 <div className="icon-field">
@@ -413,10 +748,11 @@ const Signin = () => {
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
-                    className={`form-control h-56-px bg-neutral-50 radius-12 pe-48 ${errors.password ? 'border-danger' : ''}`}
+                    className="form-control h-56-px bg-neutral-50 radius-12 pe-48"
                     placeholder="Password"
-                    value={formData.password}
-                    onChange={handleChange}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
                   />
                 </div>
                 <span
@@ -427,7 +763,6 @@ const Signin = () => {
                   <Icon icon={showPassword ? "mdi:eye-off-outline" : "mdi:eye-outline"} />
                 </span>
               </div>
-              {errors.password && <div className="text-danger small mb-16">{errors.password}</div>}
 
               <div className="d-flex justify-content-between gap-2 mb-3">
                 <div className="form-check style-check d-flex align-items-center">
@@ -436,27 +771,21 @@ const Signin = () => {
                     type="checkbox"
                     name="rememberMeFlag"
                     id="rememberMe"
-                    checked={formData.rememberMeFlag}
-                    onChange={handleChange}
+                    checked={rememberMeFlag}
+                    onChange={(e) => setRememberMeFlag(e.target.checked)}
                   />
                   <label className="form-check-label" htmlFor="rememberMe">
                     Remember Me
                   </label>
                 </div>
                 <span
-                  onClick={() => {
-                    setIsOtpForLogin(false);
-                    setShowEmailModal(true);
-                    setOtpEmail('');
-                  }}
+                  onClick={handleForgetEmail}
                   className="text-primary-600 fw-medium"
                   style={{ cursor: "pointer" }}
                 >
                   Forgot Password?
                 </span>
               </div>
-
-              {errors.submit && <div className="alert alert-danger">{errors.submit}</div>}
 
               <button
                 type="submit"
@@ -504,14 +833,41 @@ const Signin = () => {
               placeholder="Enter your email"
               value={otpEmail}
               onChange={(e) => setOtpEmail(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && (isOtpForLogin ? handleEmailVerification() : handleForgotPassword())}
+              onKeyPress={(e) => e.key === 'Enter' && handleMobilenumber(otpEmail)}
             />
             <button
               className="btn btn-primary w-100"
-              onClick={isOtpForLogin ? handleEmailVerification : handleForgotPassword}
+              onClick={() => handleMobilenumber(otpEmail)}
               disabled={loading}
             >
-              {loading ? 'Verifying...' : 'Send OTP'}
+              {loading ? 'Verifying...' : 'Verify Email'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Number Confirmation Modal */}
+      {showForgetMobileModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h5 className="mb-0">Verify your phone number</h5>
+              <button className="btn-close" onClick={() => setShowForgetMobileModal(false)}>
+                <Icon icon="material-symbols:close-rounded" />
+              </button>
+            </div>
+            <p>
+              Your registered phone number is:{" "}
+              <strong>
+                {mobileNumber ? mobileNumber.replace(/\d(?=\d{4})/g, "*") : ""}
+              </strong>
+            </p>
+            <button
+              className="btn btn-primary w-100"
+              onClick={() => handleSendOtp(mobileNumber)}
+              disabled={loading}
+            >
+              {loading ? 'Sending...' : 'Send OTP'}
             </button>
           </div>
         </div>
@@ -524,8 +880,9 @@ const Signin = () => {
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h5 className="mb-0">Enter OTP</h5>
               <button className="btn-close" onClick={() => {
+                clearOtp();
+                setOtpExpiryDate(null);
                 setShowOtpModal(false);
-                setOtp(['', '', '', '', '', '']);
               }}>
                 <Icon icon="material-symbols:close-rounded" />
               </button>
@@ -533,26 +890,25 @@ const Signin = () => {
             <p className="text-secondary-light mb-3">
               OTP sent to your registered mobile number
             </p>
-            <div className="d-flex gap-2 justify-content-center mb-4">
-              {otp.map((digit, index) => (
-                <input
-                  key={index}
-                  id={`otp-${index}`}
-                  type="text"
-                  maxLength="1"
-                  className="form-control text-center otp-input"
-                  value={digit}
-                  onChange={(e) => handleOtpChange(index, e.target.value)}
-                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                />
-              ))}
-            </div>
+            <OtpInput
+              length={6}
+              value={otp}
+              onChange={setOtp}
+              disabled={otpDisabled || loading}
+            />
             <button
-              className="btn btn-primary w-100"
-              onClick={isOtpForLogin ? verifyOtpAndLogin : verifyOtpForReset}
-              disabled={loading}
+              className="btn btn-primary w-100 mb-2"
+              onClick={handleOtpVerification}
+              disabled={loading || otpDisabled || otp.length !== 6}
             >
               {loading ? 'Verifying...' : 'Verify OTP'}
+            </button>
+            <button
+              className="btn btn-link w-100"
+              onClick={handleResendOtp}
+              disabled={loading || otpDisabled}
+            >
+              Resend OTP
             </button>
           </div>
         </div>
@@ -615,7 +971,7 @@ const Signin = () => {
 
             <button
               className="btn btn-primary w-100"
-              onClick={handleResetPassword}
+              onClick={handleResetpassword}
               disabled={loading}
             >
               {loading ? 'Resetting...' : 'Reset Password'}

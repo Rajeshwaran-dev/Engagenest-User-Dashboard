@@ -29,6 +29,9 @@ const UserAttributes = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Search filter state
+  const [searchTerm, setSearchTerm] = useState("");
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -41,6 +44,7 @@ const UserAttributes = () => {
   const [userAttrDelete] = useUserAttrDeleteMutation();
 
   const [userAttributes, setUserAttributes] = useState([]);
+  const [filteredAttributes, setFilteredAttributes] = useState([]);
   const [selectedAttributes, setSelectedAttributes] = useState([]);
 
   // Transform API data to local state
@@ -55,19 +59,40 @@ const UserAttributes = () => {
         originalValue: attr.val, // ✅ keep this
       }));
       setUserAttributes(transformedAttributes);
+      setFilteredAttributes(transformedAttributes);
     }
   }, [userAttributesData]);
 
+  // Apply search filter whenever search term changes
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredAttributes(userAttributes);
+      setCurrentPage(1); // Reset to first page when clearing search
+      return;
+    }
+
+    const term = searchTerm.toLowerCase().trim();
+    const filtered = userAttributes.filter(attr => 
+      attr.name.toLowerCase().includes(term) ||
+      attr.value.toLowerCase().includes(term) ||
+      attr.originalName.toLowerCase().includes(term) ||
+      (attr.key && attr.key.toLowerCase().includes(term))
+    );
+
+    setFilteredAttributes(filtered);
+    setCurrentPage(1); // Reset to first page when searching
+  }, [searchTerm, userAttributes]);
+
   // Calculate pagination values
-  const totalItems = userAttributes.length;
+  const totalItems = filteredAttributes.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   // Get current page items
   const currentItems = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    return userAttributes.slice(startIndex, endIndex);
-  }, [userAttributes, currentPage, itemsPerPage]);
+    return filteredAttributes.slice(startIndex, endIndex);
+  }, [filteredAttributes, currentPage, itemsPerPage]);
 
   // Get pagination numbers
   const getPaginationNumbers = () => {
@@ -115,6 +140,15 @@ const UserAttributes = () => {
       // Scroll to top of table
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  };
+
+  // Search handler
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const clearSearch = () => {
+    setSearchTerm("");
   };
 
   const handleInputChange = (e) => {
@@ -425,9 +459,45 @@ const UserAttributes = () => {
     <MasterLayout>
       <Breadcrumb title="User Data Fields" />
 
-      {/* Bulk Actions and Add Button */}
+      {/* Search Filter and Action Buttons */}
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <div>
+        <div className="d-flex align-items-center gap-3">
+          {/* Search Input */}
+          <div className="position-relative">
+            <Icon 
+              icon="material-symbols:search" 
+              className="position-absolute" 
+              style={{ left: "12px", top: "50%", transform: "translateY(-50%)", color: "#6b7280", zIndex: "10" }}
+            />
+            <input
+              type="text"
+              className="form-control ps-40"
+              placeholder="Search by name or value..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              style={{ width: "300px" }}
+            />
+            {searchTerm && (
+              <button
+                className="btn btn-link position-absolute"
+                onClick={clearSearch}
+                style={{ right: "12px", top: "50%", transform: "translateY(-50%)", padding: "0", color: "#6b7280" }}
+              >
+                <Icon icon="mingcute:close-line" />
+              </button>
+            )}
+          </div>
+
+          {/* Selected Attributes Count */}
+          {selectedAttributes.length > 0 && (
+            <span className="text-muted">
+              {selectedAttributes.length} selected
+            </span>
+          )}
+        </div>
+
+        <div className="d-flex align-items-center gap-2">
+          {/* Bulk Delete Button */}
           {selectedAttributes.length > 0 && (
             <button
               className="btn-secondary d-flex align-items-center gap-2 me-2"
@@ -437,14 +507,16 @@ const UserAttributes = () => {
               Delete Selected ({selectedAttributes.length})
             </button>
           )}
+          
+          {/* Create Button */}
+          <button
+            className="btn-primary d-flex align-items-center gap-2"
+            onClick={handleCreateClick}
+          >
+            <Icon style={{ fontSize: "20px" }} icon="mingcute:add-line" />
+            Create User Attribute
+          </button>
         </div>
-        <button
-          className="btn-primary d-flex align-items-center gap-2"
-          onClick={handleCreateClick}
-        >
-          <Icon style={{ fontSize: "20px" }} icon="mingcute:add-line" />
-          Create User Attribute
-        </button>
       </div>
 
       <div className="card basic-data-table">
@@ -453,14 +525,25 @@ const UserAttributes = () => {
             <table className="table bordered-table mb-0">
               <thead>
                 <tr>
-                  <th scope="col">
+                  <th scope="col" style={{ width: "80px" }}>
                     <div className="form-check style-check d-flex align-items-center">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        checked={isAllCurrentPageSelected()}
+                        ref={(input) => {
+                          if (input) {
+                            input.indeterminate = isSomeCurrentPageSelected();
+                          }
+                        }}
+                        onChange={(e) => handleSelectAllCurrentPage(e.target.checked)}
+                      />
                       <label className="form-check-label ms-2">S.No.</label>
                     </div>
                   </th>
                   <th scope="col">Name</th>
                   <th scope="col">Value</th>
-                  <th scope="col">Actions</th>
+                  <th scope="col" style={{ width: "120px" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -470,6 +553,12 @@ const UserAttributes = () => {
                     <tr key={attribute.id}>
                       <td>
                         <div className="form-check style-check d-flex align-items-center">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={selectedAttributes.includes(attribute.id)}
+                            onChange={(e) => handleSelectAttribute(attribute.id, e.target.checked)}
+                          />
                           <label className="form-check-label ms-2">
                             {(actualIndex + 1).toString().padStart(2, "0")}
                           </label>
@@ -483,6 +572,7 @@ const UserAttributes = () => {
                             onClick={() => handleEditAttribute(attribute)}
                             className="w-32-px h-32-px me-8 bg-gradient-start text-bg-primary rounded-circle d-inline-flex align-items-center justify-content-center border-0"
                             style={{ cursor: "pointer" }}
+                            title="Edit"
                           >
                             <Icon icon="lucide:edit" />
                           </button>
@@ -492,6 +582,7 @@ const UserAttributes = () => {
                             }
                             className="w-32-px h-32-px me-8 bg-gradient-start text-bg-primary rounded-circle d-inline-flex align-items-center justify-content-center border-0"
                             style={{ cursor: "pointer" }}
+                            title="Delete"
                           >
                             <Icon icon="mingcute:delete-2-line" />
                           </button>
@@ -500,10 +591,14 @@ const UserAttributes = () => {
                     </tr>
                   );
                 })}
-                {userAttributes.length === 0 && (
+                {filteredAttributes.length === 0 && (
                   <tr>
                     <td colSpan="4" className="text-center py-4">
-                      No user attributes found. Create your first attribute!
+                      {searchTerm ? (
+                        `No attributes found matching "${searchTerm}". Try a different search term.`
+                      ) : (
+                        "No user attributes found. Create your first attribute!"
+                      )}
                     </td>
                   </tr>
                 )}
@@ -512,16 +607,25 @@ const UserAttributes = () => {
           </div>
 
           {/* Pagination */}
-          {userAttributes.length > itemsPerPage && (
+          {filteredAttributes.length > itemsPerPage && (
             <div className="col-md-12 mt-3">
               <div className="card p-10 overflow-hidden position-relative radius-12">
-                <div className="d-flex justify-content-end align-items-center">
+                <div className="d-flex justify-content-between align-items-center">
+                  {/* Results info */}
+                  <div>
+                    <span className="text-muted">
+                      Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} entries
+                    </span>
+                  </div>
+                  
+                  {/* Pagination controls */}
                   <ul className="pagination d-flex flex-wrap align-items-center gap-2 justify-content-end mb-0">
                     <li className="page-item">
                       <button
                         className="page-link bg-primary-50 text-secondary-light fw-medium rounded-circle border-0 py-10 d-flex align-items-center justify-content-center h-48-px w-48-px"
                         onClick={handlePreviousPage}
                         disabled={currentPage === 1}
+                        title="Previous Page"
                       >
                         <Icon icon="iconamoon:arrow-left-2-light" className="text-xxl" />
                       </button>
@@ -549,6 +653,7 @@ const UserAttributes = () => {
                         className="page-link bg-primary-50 text-secondary-light fw-medium rounded-circle border-0 py-10 d-flex align-items-center justify-content-center h-48-px w-48-px"
                         onClick={handleNextPage}
                         disabled={currentPage === totalPages}
+                        title="Next Page"
                       >
                         <Icon icon="iconamoon:arrow-right-2-light" className="text-xxl" />
                       </button>

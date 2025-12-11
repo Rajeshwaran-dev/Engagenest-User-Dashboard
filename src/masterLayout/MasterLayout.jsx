@@ -3,13 +3,24 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import ThemeToggleButton from "../helper/ThemeToggleButton";
 import Spinner from "../components/Spinner";
+import { useNavigate } from "react-router-dom";
+import { useGetUserDetailsQuery } from "../store/ApiFilesV2/UserApis";
 
 const MasterLayout = ({ children }) => {
+  const navigate = useNavigate();
   let [sidebarActive, seSidebarActive] = useState(false);
   let [mobileMenu, setMobileMenu] = useState(false);
   const [loading, setLoading] = useState(false);
   const location = useLocation();
   const sidebarMenuRef = useRef(null); // Ref for the scrollable menu container
+
+  const { data: userDetails, isLoading: userDetailsLoading } = useGetUserDetailsQuery();
+
+  const wabaNumber = userDetails?.data?.businessWhatsappNumber || "Not configured";
+  const wabaStatus = userDetails?.data?.whatsappStatus || "inactive"; // optional field
+
+  // Determine UI label & color
+  const isActive = wabaStatus?.toLowerCase() === "active";
 
   // Only show loading for main content, not sidebar
   useEffect(() => {
@@ -48,16 +59,16 @@ const MasterLayout = ({ children }) => {
         if (submenu) {
           submenu.style.maxHeight = `${submenu.scrollHeight}px`; // Expand submenu
         }
-        
+
         // 🚀 SCROLL LOGIC CHANGE: Scroll to the 'start' (top) of the clicked element
         setTimeout(() => {
-            if (sidebarMenuRef.current) {
-                // Scroll the clicked dropdown element into the view of its container
-                clickedDropdown.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start' // 👈 'start' ஆக மாற்றப்பட்டுள்ளது. இதனால் துணை மெனுக்கள் தெளிவாக தெரியும்.
-                });
-            }
+          if (sidebarMenuRef.current) {
+            // Scroll the clicked dropdown element into the view of its container
+            clickedDropdown.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start' // 👈 'start' ஆக மாற்றப்பட்டுள்ளது. இதனால் துணை மெனுக்கள் தெளிவாக தெரியும்.
+            });
+          }
         }, 300); // Small delay to ensure max-height transition starts first
       }
     };
@@ -124,19 +135,19 @@ const MasterLayout = ({ children }) => {
           }
         });
       });
-      
+
       // 🚀 SCROLL LOGIC CHANGE: Scroll to the 'start' (top) of the active element on page load/path change
       if (activeDropdownOpened && sidebarMenuRef.current) {
-          // Find the actively open dropdown
-          const openDropdown = document.querySelector(".sidebar-menu .dropdown.open");
-          if (openDropdown) {
-              setTimeout(() => { // Small delay to ensure max-height animation completes
-                  openDropdown.scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'start' // 👈 'start' ஆக மாற்றப்பட்டுள்ளது.
-                  });
-              }, 150);
-          }
+        // Find the actively open dropdown
+        const openDropdown = document.querySelector(".sidebar-menu .dropdown.open");
+        if (openDropdown) {
+          setTimeout(() => { // Small delay to ensure max-height animation completes
+            openDropdown.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start' // 👈 'start' ஆக மாற்றப்பட்டுள்ளது.
+            });
+          }, 150);
+        }
       }
     };
 
@@ -150,6 +161,16 @@ const MasterLayout = ({ children }) => {
       });
     };
   }, [location.pathname]);
+
+  const handleLogout = () => {
+    // Remove any authentication data
+    localStorage.removeItem("loginData");
+    sessionStorage.clear();
+
+    // Force redirect & clear browser history
+    navigate("/", { replace: true });
+    window.location.reload(); // optional to fully reset app state
+  };
 
   let sidebarControl = () => {
     seSidebarActive(!sidebarActive);
@@ -595,71 +616,74 @@ const MasterLayout = ({ children }) => {
                       style={{ fontSize: "24px", marginRight: "6px" }}
                       icon="logos:whatsapp-icon"
                     />
-                    <span className="text-muted small d-none d-sm-inline">
-                      WABA :
-                    </span>
-                    <span className="text-sm">919606043006</span>
+                    <span className="d-none d-sm-inline" style={{ fontWeight: "700", fontSize: "16px" }}>WABA :</span>
+                    <span className="text-sm" style={{ fontWeight: "700", fontSize: "14px" }}>{wabaNumber}</span>
                   </div>
 
                   <div className="vr d-none d-md-inline"></div>
 
                   {/* Status */}
                   <div className="d-flex align-items-center gap-1">
-                    <span className="text-muted small d-none d-sm-inline">
-                      Status :
-                    </span>
-                    <span className="text-success text-sm">
-                      Live
+                    <span className="d-none d-sm-inline" style={{ fontWeight: "700", fontSize: "16px" }}>Status :</span>
+                    <span style={{ fontWeight: "700", fontSize: "16px" }} className={`${isActive ? "text-success" : "text-danger"}`} >
+                      {isActive ? "Active" : "Not Working"}
                     </span>
                   </div>
 
                   <div className="vr d-none d-md-inline"></div>
 
                   {/* Quality */}
-                  <div className="d-flex align-items-center gap-1">
-                    <span className="text-muted small d-none d-sm-inline">
-                      Quality :
-                    </span>
-                    <div className="d-flex align-items-center gap-1">
-                      <div
-                        className="bg-success rounded-circle"
-                        style={{ width: "8px", height: "8px" }}
-                      ></div>
-                      <span className="text-success text-sm">
-                        Green
-                      </span>
-                    </div>
-                  </div>
+                  {(() => {
+                    const qualityLevel = userDetails?.data?.qualityLevel || "Green";
+                    const qualityColorClass =
+                      qualityLevel.toLowerCase() === "green"
+                        ? "bg-success"
+                        : qualityLevel.toLowerCase() === "yellow"
+                          ? "bg-warning"
+                          : "bg-danger";
+                    return (
+                      <div className="d-flex align-items-center gap-1">
+                        <span className="d-none d-sm-inline" style={{ fontWeight: "700", fontSize: "16px" }}>Quality :</span>
+                        <div className="d-flex align-items-center gap-1">
+                          <div
+                            className={`rounded-circle ${qualityColorClass}`}
+                            style={{ width: "8px", height: "8px" }}
+                          ></div>
+                          <span className="text-capitalize" style={{ fontWeight: "700", fontSize: "16px" }}>{qualityLevel}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   <div className="vr d-none d-lg-inline"></div>
 
-                  {/* Tier with Progress - Improved */}
-                  <div className="d-flex align-items-center gap-2">
-                    <span className="text-muted small d-none d-lg-inline">
-                      Tier:
-                    </span>
-                    <div className="d-flex align-items-center gap-2">
-                      <div style={{ minWidth: "80px" }}>
-                        <div
-                          className="progress progress-sm rounded-pill bg-light"
-                          role="progressbar"
-                          aria-valuenow={10}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                          style={{ height: "6px" }}
-                        >
-                          <div
-                            className="progress-bar bg-primary rounded-pill"
-                            style={{ width: "10%" }}
-                          />
+                  {/* Tier with Progress */}
+                  {(() => {
+                    const tierUsed = userDetails?.data?.tierUsed || 0;
+                    const tierTotal = userDetails?.data?.tierTotal || 1000;
+                    const tierProgress = Math.min((tierUsed / tierTotal) * 100, 100).toFixed(1);
+
+                    return (
+                      <div className="d-flex align-items-center gap-2">
+                        <span className="text-muted small d-none d-lg-inline" style={{ fontWeight: "700", fontSize: "16px" }}>Tier:</span>
+                        <div className="d-flex align-items-center gap-2">
+                          <div style={{ minWidth: 80 }}>
+                            <div className="progress rounded-pill bg-light" style={{ height: 6 }}>
+                              <div
+                                className="progress-bar bg-primary rounded-pill"
+                                style={{ width: `${tierProgress}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                          <span className="text-secondary font-xs fw-semibold text-nowrap" style={{ fontWeight: "700", fontSize: "16px" }}>
+                            {tierUsed} of {tierTotal}
+                          </span>
                         </div>
                       </div>
-                      <span className="text-secondary-light font-xs fw-semibold line-height-1 text-nowrap">
-                        0 of 1000
-                      </span>
-                    </div>
-                  </div>
+                    );
+                  })()}
                 </div>
+
               </div>
             </div>
             <div className="col-auto">
@@ -719,8 +743,8 @@ const MasterLayout = ({ children }) => {
                           Subscriptions
                         </Link>
                       </li>
-                      <li>
-                        <Link
+                      <li >
+                        <button onClick={handleLogout}
                           style={{ fontWeight: "600", fontSize: "16px" }}
                           to="/"
                           className="dropdown-item text-primary px-0 py-8 hover-bg-transparent hover-text-primary d-flex align-items-center gap-3"
@@ -731,7 +755,7 @@ const MasterLayout = ({ children }) => {
                             className="icon text-xl"
                           />{" "}
                           Log Out
-                        </Link>
+                        </button>
                       </li>
                     </ul>
                   </div>
@@ -744,14 +768,7 @@ const MasterLayout = ({ children }) => {
 
         {/* dashboard-main-body - Only this part shows loading */}
         <div className="dashboard-main-body">
-          {loading ? (
-            <Spinner
-              size="small"
-              centered={true}
-            />
-          ) : (
-            children
-          )}
+          {children}
         </div>
         <footer className="d-footer"></footer>
       </main>

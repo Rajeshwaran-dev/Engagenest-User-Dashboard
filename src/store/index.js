@@ -7,6 +7,7 @@ import { ProfileApis } from "./ApiFiles/ProfileApis";
 import { PaymentsApis } from "./ApiFilesV2/PaymentsApis";
 import { TemplateApisV2 } from "./ApiFilesV2/TemplateApisV2";
 import { AgentApiV2 } from "./ApiFilesV2/AgentApi";
+import { GeneralApisV2 } from "./ApiFilesV2/GeneralApis";
 
 import authslice from "./Slices/authSlice";
 
@@ -19,6 +20,7 @@ export const store = configureStore({
     [PaymentsApis.reducerPath]: PaymentsApis.reducer,
     [AgentApiV2.reducerPath]: AgentApiV2.reducer,
     [TemplateApisV2.reducerPath]: TemplateApisV2.reducer,
+    [GeneralApisV2.reducerPath]: GeneralApisV2.reducer,
     auth: authslice,
   },
   middleware: (getDefaultMiddleware) =>
@@ -37,7 +39,8 @@ export const store = configureStore({
       .concat(FileHandlerApisV2.middleware)
       .concat(PaymentsApis.middleware)
       .concat(AgentApiV2.middleware)
-      .concat(TemplateApisV2.middleware),
+      .concat(TemplateApisV2.middleware)
+      .concat(GeneralApisV2.middleware),
 });
 
 setupListeners(store.dispatch);

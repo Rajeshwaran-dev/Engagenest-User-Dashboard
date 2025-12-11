@@ -42,11 +42,15 @@ const ApiSettings = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiKeys, setApiKeys] = useState([]);
+  
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
+  const [filteredApiKeys, setFilteredApiKeys] = useState([]);
 
   // Load API keys from backend
   useEffect(() => {
@@ -64,19 +68,43 @@ const ApiSettings = () => {
           minute: "2-digit",
           hour12: true,
         }) : "N/A",
+        rawCreatedAt: key.createdAt ? new Date(key.createdAt) : new Date(),
         key: key.token ? `${key.token.substring(0, 20)}...` : "",
         fullKey: key.token || "",
       }));
       setApiKeys(transformedKeys);
-      // Calculate total pages
-      setTotalPages(Math.ceil(transformedKeys.length / itemsPerPage));
     }
-  }, [apiKeysData, itemsPerPage]);
+  }, [apiKeysData]);
+
+  // Apply filters and sorting whenever dependencies change
+  useEffect(() => {
+    if (apiKeys.length === 0) {
+      setFilteredApiKeys([]);
+      return;
+    }
+
+    let result = [...apiKeys];
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim();
+      result = result.filter(key => 
+        key.name.toLowerCase().includes(term) ||
+        key.key.toLowerCase().includes(term)
+      );
+    }
+
+    setFilteredApiKeys(result);
+    // Calculate total pages based on filtered results
+    setTotalPages(Math.ceil(result.length / itemsPerPage));
+    // Reset to first page when filters change
+    setCurrentPage(1);
+  }, [apiKeys, searchTerm, itemsPerPage]);
 
   // Calculate current items to display
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentApiKeys = apiKeys.slice(indexOfFirstItem, indexOfLastItem);
+  const currentApiKeys = filteredApiKeys.slice(indexOfFirstItem, indexOfLastItem);
 
   // Generate pagination numbers
   const getPaginationNumbers = () => {
@@ -114,6 +142,11 @@ const ApiSettings = () => {
     }
 
     return pageNumbers;
+  };
+
+  // Filter handler functions
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
   };
 
   const handleInputChange = (e) => {
@@ -465,18 +498,38 @@ const ApiSettings = () => {
               aria-labelledby="pills-api-keys-tab"
               tabIndex={0}
             >
-              <div
-                className="d-flex justify-content-end align-items-center"
-                style={{ margin: "20px 0", paddingRight: "10px" }}
-              >
-                <button
-                  className="btn-primary d-flex align-items-center gap-2"
-                  onClick={() => setShowModal(true)}
-                  disabled={isLoadingApiKeys}
-                >
-                  <Icon style={{ fontSize: "20px" }} icon="mingcute:add-line" />
-                  Create New Api Key
-                </button>
+              <div className="d-flex justify-content-between align-items-center" style={{ margin: "20px 0", padding: "0 10px" }}>
+                {/* Filter Section */}
+                <div className="d-flex align-items-center gap-3">
+                  {/* Search Input */}
+                  <div className="position-relative">
+                    <Icon 
+                      icon="material-symbols:search" 
+                      className="position-absolute" 
+                      style={{ left: "12px", top: "50%", transform: "translateY(-50%)", color: "#6b7280" }}
+                    />
+                    <input
+                      type="text"
+                      className="form-control ps-40"
+                      placeholder="Search by name..."
+                      value={searchTerm}
+                      onChange={handleSearchChange}
+                      style={{ width: "250px" }}
+                    />
+                  </div>
+                </div>
+
+                {/* Create New API Key Button */}
+                <div>
+                  <button
+                    className="btn-primary d-flex align-items-center gap-2"
+                    onClick={() => setShowModal(true)}
+                    disabled={isLoadingApiKeys}
+                  >
+                    <Icon style={{ fontSize: "20px" }} icon="mingcute:add-line" />
+                    Create New Api Key
+                  </button>
+                </div>
               </div>
 
               <div className="card basic-data-table">
@@ -499,7 +552,11 @@ const ApiSettings = () => {
                           </tr>
                         ) : currentApiKeys.length === 0 ? (
                           <tr>
-                            <td colSpan="5" className="text-center">No API keys found</td>
+                            <td colSpan="5" className="text-center">
+                              {filteredApiKeys.length === 0 && apiKeys.length > 0 ? 
+                                "No API keys match your filters" : 
+                                "No API keys found"}
+                            </td>
                           </tr>
                         ) : (
                           currentApiKeys.map((apiKey, index) => (
@@ -536,7 +593,7 @@ const ApiSettings = () => {
                   </div>
 
                   {/* Pagination */}
-                  {apiKeys.length > itemsPerPage && (
+                  {filteredApiKeys.length > itemsPerPage && (
                     <div className="col-md-12 mt-3">
                       <div className="card p-10 overflow-hidden position-relative radius-12">
                         <ul className="pagination d-flex flex-wrap align-items-center gap-2 justify-content-end mb-0">

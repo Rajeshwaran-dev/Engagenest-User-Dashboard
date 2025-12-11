@@ -2484,6 +2484,10 @@ th {
   height: 27.5rem !important;
 }
 
+.h-custom-px {
+  height: 100px
+}
+
 .max-h-258-px {
   max-height: 258px;
 }
@@ -16125,6 +16129,53 @@ th:last-child {
 .custom-tooltip-container:hover .custom-tooltip-text1 {
   visibility: visible;
   opacity: 1;
+}
+
+/* Category Filter Styles */
+.category-filter-section {
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 12px;
+}
+
+.category-filter-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.category-filter-btn {
+  padding: 6px 16px;
+  border: 1px solid #dee2e6;
+  background: white;
+  border-radius: 20px;
+  font-size: 14px;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.category-filter-btn:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+.category-filter-btn.active {
+  background: #0d6efd;
+  color: white;
+  border-color: #0d6efd;
+}
+
+/* Template Gallery Styles */
+.template-gallery-filters {
+  margin-bottom: 20px;
+}
+
+.template-search-container {
+  flex: 1;
+}
+
+.type-filter-container {
+  min-width: 150px;
 }
 
 

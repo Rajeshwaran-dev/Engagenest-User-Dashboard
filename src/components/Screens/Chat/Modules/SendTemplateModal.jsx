@@ -19,7 +19,7 @@ const SendTemplateModal = ({ onClose, onTemplateSend }) => {
     {
       id: 1,
       name: "pending_checkout_notification",
-      category: "E-commerce",
+      category: "Marketing",
       type: "text",
       description: "Dear {{CustomerName}}, You have an order pending on XYZ website. Please complete the payment to confirm and process your order. Regards, XYZ",
       preview: "text",
@@ -28,7 +28,7 @@ const SendTemplateModal = ({ onClose, onTemplateSend }) => {
     {
       id: 2,
       name: "shoplify",
-      category: "E-commerce",
+      category: "Marketing",
       type: "text",
       description: "Dear {{CustomerName}}, Thanks for checking out xyz website and being a part of us. Your cart is still awaited for you. Order will be processed post payment processing. Regards, XYZ company",
       preview: "text",
@@ -37,7 +37,7 @@ const SendTemplateModal = ({ onClose, onTemplateSend }) => {
     {
       id: 3,
       name: "shoplify2",
-      category: "E-commerce",
+      category: "Marketing",
       type: "text",
       description: "Dear {{CustomerName}}, You have items pending in your cart on XYZ website. Please complete your checkout to process your order. Once payment is received, it'll be confirmed. Regards, XYZ Team",
       preview: "text",
@@ -46,7 +46,7 @@ const SendTemplateModal = ({ onClose, onTemplateSend }) => {
     {
       id: 4,
       name: "welcome_message",
-      category: "Onboarding",
+      category: "Utlity",
       type: "text",
       description: "Welcome to Askeval, {{name}}! We're excited to have you onboard.",
       preview: "text",
@@ -110,22 +110,58 @@ const SendTemplateModal = ({ onClose, onTemplateSend }) => {
       maxFileSize: 12,
       variables: ["item1", "item2"],
       carouselMediaType: "mixed"
+    },
+    // Add more templates with different categories
+    {
+      id: 10,
+      name: "ticket_reminder",
+      category: "Utility",
+      type: "text",
+      description: "Hi {{Name}}. You haven't taken any action on your ticket {{ticketid}} yet. Please take the necessary steps.",
+      preview: "text",
+      variables: ["Name", "ticketid"]
+    },
+    {
+      id: 11,
+      name: "appointment_reminder",
+      category: "Utility",
+      type: "text",
+      description: "Hello {{PatientName}}, your appointment with Dr. {{DoctorName}} is scheduled.",
+      preview: "text",
+      variables: ["PatientName", "DoctorName"]
+    },
+    {
+      id: 12,
+      name: "auth_code",
+      category: "Authentication",
+      type: "text",
+      description: "Your verification code is {{code}}. It expires in {{minutes}} minutes.",
+      preview: "text",
+      variables: ["code", "minutes"]
     }
   ];
 
-  // Filter templates based on search and type
+  // Filter templates based on search, category and type
   const filteredTemplates = templates.filter((template) => {
     const matchesSearch =
       template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       template.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      template.category.toLowerCase().includes(searchTerm.toLowerCase());
+      template.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      template.type.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // Filter by template type (text/image/video)
+    const matchesCategory =
+      selectedCategory === "all" || template.category === selectedCategory;
+
+    // Filter by template type (text/image/video/carousel)
     const matchesType =
       selectedType === "all" || template.type === selectedType;
 
-    return matchesSearch && matchesType;
+    return matchesSearch && matchesCategory && matchesType;
   });
+
+  // Define categories and types for filtering
+  const categories = ["all", "Marketing", "Utility", "Authentication"];
+  const types = ["all", "text", "image", "video", "carousel"];
 
   const handleSelectTemplate = (template) => {
     setSelectedTemplate(template);
@@ -461,6 +497,21 @@ const SendTemplateModal = ({ onClose, onTemplateSend }) => {
         </div>
 
         <div className="modal-body template-gallery-body">
+          {/* Category Filter - Marketing, Utility, Authentication, E-commerce, Onboarding */}
+          <div className="template-category-filter" style={{ marginBottom: "20px" }}>
+            <div className="category-buttons">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  className={`category-btn ${selectedCategory === category ? "active" : ""}`}
+                  onClick={() => setSelectedCategory(category)}
+                >
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Search and Filter Section */}
           <div className="template-gallery-filters">
             <div className="template-search-container">
@@ -468,7 +519,7 @@ const SendTemplateModal = ({ onClose, onTemplateSend }) => {
                 <input
                   type="text"
                   className="form-control form-control-sm ps-5"
-                  placeholder="Search by template name"
+                  placeholder="Search by template name, description, category, or type..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -480,39 +531,18 @@ const SendTemplateModal = ({ onClose, onTemplateSend }) => {
               </div>
             </div>
 
-            {/* Type Filter - Text/Image/Video Buttons */}
+            {/* Type Filter - Text/Image/Video/Carousel Buttons */}
             <div className="template-category-filter">
               <div className="category-buttons">
-                <button
-                  className={`category-btn ${selectedType === "all" ? "active" : ""}`}
-                  onClick={() => setSelectedType("all")}
-                >
-                  All
-                </button>
-                <button
-                  className={`category-btn ${selectedType === "text" ? "active" : ""}`}
-                  onClick={() => setSelectedType("text")}
-                >
-                  Text
-                </button>
-                <button
-                  className={`category-btn ${selectedType === "image" ? "active" : ""}`}
-                  onClick={() => setSelectedType("image")}
-                >
-                  Image
-                </button>
-                <button
-                  className={`category-btn ${selectedType === "video" ? "active" : ""}`}
-                  onClick={() => setSelectedType("video")}
-                >
-                  Video
-                </button>
-                <button
-                  className={`category-btn ${selectedType === "carousel" ? "active" : ""}`}
-                  onClick={() => setSelectedType("carousel")}
-                >
-                  Carousel
-                </button>
+                {types.map((type) => (
+                  <button
+                    key={type}
+                    className={`category-btn ${selectedType === type ? "active" : ""}`}
+                    onClick={() => setSelectedType(type)}
+                  >
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
@@ -566,8 +596,8 @@ const SendTemplateModal = ({ onClose, onTemplateSend }) => {
                 ) : (
                   <div className="template-no-results">
                     <Icon icon="eva:search-outline" style={{ fontSize: "48px", color: "#6c757d", marginBottom: "16px" }} />
-                    <p>No templates available</p>
-
+                    <p>No templates found matching your criteria.</p>
+                    <small className="text-muted">Try adjusting your search or filters</small>
                   </div>
                 )}
               </div>

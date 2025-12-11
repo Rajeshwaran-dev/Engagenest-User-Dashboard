@@ -33,7 +33,7 @@ const BillingModule = () => {
       startDate: moment(startDate).valueOf(),
       endDate: moment(endDate).valueOf()
     });
-    setCurrentPage(1); // Reset to first page when date range changes
+    setCurrentPage(1);
   };
 
   // Calculate pagination values
@@ -67,12 +67,10 @@ const BillingModule = () => {
     const pageNumbers = [];
 
     if (totalPages <= 5) {
-      // Show all pages if total pages are 5 or less
       for (let i = 1; i <= totalPages; i++) {
         pageNumbers.push(i);
       }
     } else {
-      // Show limited pages with ellipsis
       if (currentPage <= 3) {
         pageNumbers.push(1, 2, 3, 4, '...', totalPages);
       } else if (currentPage >= totalPages - 2) {
@@ -85,7 +83,7 @@ const BillingModule = () => {
     return pageNumbers;
   };
 
-  // Updated billing cards to match the old view structure - 6 cards only
+  // ✅ FIXED: Billing cards now use billingReports (which comes from /conversationCost)
   const billingCards = [
     {
       id: 1,
@@ -159,7 +157,13 @@ const BillingModule = () => {
                       {card.title}
                     </span>
                     <h6 className="fw-semibold text-primary-light mb-1">
-                      {card.value}
+                      {reportsLoading ? (
+                        <span className="" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </span>
+                      ) : (
+                        card.value
+                      )}
                     </h6>
                   </div>
                 </div>

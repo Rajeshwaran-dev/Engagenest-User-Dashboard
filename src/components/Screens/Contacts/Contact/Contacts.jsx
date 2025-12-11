@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import MasterLayout from "../../../../masterLayout/MasterLayout";
 import Breadcrumb from "../../../Breadcrumb";
 import { Icon } from "@iconify/react/dist/iconify.js";
@@ -26,10 +26,16 @@ const Contacts = () => {
   const [modalType, setModalType] = useState(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const [contacts, setContacts] = useState([]);
+  const [filteredContacts, setFilteredContacts] = useState([]);
   const [selectedContacts, setSelectedContacts] = useState([]);
   const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
   const [editingContact, setEditingContact] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState("all");
+  const [availableFilterGroups, setAvailableFilterGroups] = useState([]);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -65,7 +71,7 @@ const Contacts = () => {
     const checkAuth = () => {
       try {
         const loginDetails = JSON.parse(localStorage.getItem("loginData"));
-        
+
         const authenticated = !!loginDetails?.token;
         if (isMounted.current) {
           setIsAuthenticated(authenticated);
@@ -127,11 +133,19 @@ const Contacts = () => {
   const [exportOneContact] = useExportOneContactMutation();
 
   // Get available groups from API
-  const availableGroups = React.useMemo(() => {
+  const availableGroups = useMemo(() => {
     if (groupsData?.data) {
       return groupsData.data.map(group => group.name);
     }
     return [];
+  }, [groupsData]);
+
+  // Update filter groups when groups data changes
+  useEffect(() => {
+    if (groupsData?.data) {
+      const groups = groupsData.data.map(group => group.name);
+      setAvailableFilterGroups(groups);
+    }
   }, [groupsData]);
 
   // Helper function to validate if an ID is valid
@@ -154,6 +168,7 @@ const Contacts = () => {
   useEffect(() => {
     if (!isAuthenticated) {
       setContacts([]);
+      setFilteredContacts([]);
       return;
     }
 
@@ -334,16 +349,55 @@ const Contacts = () => {
 
         // ✅ Only keep the cleaned version
         setContacts(cleanedContacts);
+        setFilteredContacts(cleanedContacts); // Initially set filtered contacts to all contacts
 
         // Reset to first page when data changes
         setCurrentPage(1);
       } else {
         setContacts([]);
+        setFilteredContacts([]);
       }
     } else if (!contactsLoading && !contactsData) {
       setContacts([]);
+      setFilteredContacts([]);
     }
   }, [contactsData, groupsData, contactsLoading, contactsError, isAuthenticated, availableGroups, userAttributesData]);
+
+  // Apply filters whenever search term or selected group changes
+  useEffect(() => {
+    if (contacts.length === 0) {
+      setFilteredContacts([]);
+      return;
+    }
+
+    let result = [...contacts];
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim();
+      result = result.filter(contact =>
+        contact.name.toLowerCase().includes(term) ||
+        contact.number.toLowerCase().includes(term) ||
+        contact.tags.toLowerCase().includes(term) ||
+        (contact.groupsArray && contact.groupsArray.some(group =>
+          group.toLowerCase().includes(term)
+        )) ||
+        (userAttributesData && userAttributesData.some(attr =>
+          contact[attr.key] && String(contact[attr.key]).toLowerCase().includes(term)
+        ))
+      );
+    }
+
+    // Apply group filter
+    if (selectedGroup !== "all") {
+      result = result.filter(contact =>
+        contact.groupsArray && contact.groupsArray.includes(selectedGroup)
+      );
+    }
+
+    setFilteredContacts(result);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [contacts, searchTerm, selectedGroup, userAttributesData]);
 
   // Handle authentication errors
   useEffect(() => {
@@ -365,12 +419,12 @@ const Contacts = () => {
   }, [contactsError, groupsError, navigate, enqueueSnackbar]);
 
   // Pagination logic
-  const totalPages = Math.ceil(contacts.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredContacts.length / itemsPerPage);
 
   // Get current page contacts
   const indexOfLastContact = currentPage * itemsPerPage;
   const indexOfFirstContact = indexOfLastContact - itemsPerPage;
-  const currentContacts = contacts.slice(indexOfFirstContact, indexOfLastContact);
+  const currentContacts = filteredContacts.slice(indexOfFirstContact, indexOfLastContact);
 
   // Handle page change
   const handlePageChange = (pageNumber) => {
@@ -392,6 +446,20 @@ const Contacts = () => {
       setCurrentPage(currentPage - 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  };
+
+  // Filter handler functions
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleGroupFilterChange = (e) => {
+    setSelectedGroup(e.target.value);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedGroup("all");
   };
 
   // Generate pagination numbers with ellipsis
@@ -620,7 +688,7 @@ const Contacts = () => {
     e.stopPropagation();
 
     if (e.target.checked) {
-      const validIds = contacts
+      const validIds = filteredContacts
         .filter(c => isValidId(c.id))
         .map(c => String(c.id).trim());
 
@@ -704,7 +772,6 @@ const Contacts = () => {
       enqueueSnackbar(error?.data?.msg || "Failed to delete contacts", { variant: "error" });
     }
   };
-
 
   const resetForms = () => {
     setFormData({
@@ -1177,7 +1244,7 @@ const Contacts = () => {
     }
   };
 
-  const isAllSelected = selectedContacts.length === contacts.length && contacts.length > 0;
+  const isAllSelected = selectedContacts.length === filteredContacts.length && filteredContacts.length > 0;
 
   if (!isAuthenticated) {
     return (
@@ -1261,7 +1328,47 @@ const Contacts = () => {
     <MasterLayout>
       <Breadcrumb title="Contact Group" />
       <div>
-        <div className="d-flex justify-content-end align-items-center mb-4 p-12">
+        {/* Results Count and Action Buttons */}
+        <div className="d-flex justify-content-between align-items-center mb-4 p-12">
+          <div className="d-flex align-items-center gap-3">
+            <div className="position-relative">
+              <Icon
+                icon="material-symbols:search"
+                className="position-absolute"
+                style={{
+                  left: "12px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#6b7280",
+                  zIndex: 10
+                }}
+              />
+              <input
+                type="text"
+                className="form-control ps-40"
+                placeholder="Search by name, number, tags, or groups..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+              />
+              {searchTerm && (
+                <button
+                  className="btn btn-link position-absolute"
+                  onClick={() => setSearchTerm("")}
+                  style={{
+                    right: "12px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    padding: "0",
+                    color: "#6b7280"
+                  }}
+                  title="Clear search"
+                >
+                  <Icon icon="mingcute:close-line" />
+                </button>
+              )}
+            </div>
+          </div>
+
           <div className="d-flex align-items-center gap-8">
             <button
               className="d-flex align-items-center justify-content-center"
@@ -1358,7 +1465,7 @@ const Contacts = () => {
                           checked={isAllSelected}
                           onChange={handleSelectAll}
                           onClick={(e) => e.stopPropagation()}
-                          disabled={contacts.length === 0}
+                          disabled={filteredContacts.length === 0}
                         />
                       </div>
                     </th>
@@ -1513,8 +1620,23 @@ const Contacts = () => {
                       <td colSpan={7 + (userAttributesData ? userAttributesData.length : 0)} className="text-center py-4">
                         <div className="d-flex flex-column align-items-center">
                           <Icon icon="mdi:account-multiple-outline" style={{ fontSize: '48px', color: '#ccc', marginBottom: '16px' }} />
-                          <p className="text-muted mb-0">No contacts found</p>
-                          <p className="text-muted">Click the + button to add your first contact</p>
+                          {searchTerm || selectedGroup !== "all" ? (
+                            <>
+                              <p className="text-muted mb-0">No contacts found matching your filters</p>
+                              <p className="text-muted">Try adjusting your search or group filter</p>
+                              <button
+                                className="btn btn-link mt-2"
+                                onClick={clearFilters}
+                              >
+                                Clear filters
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-muted mb-0">No contacts found</p>
+                              <p className="text-muted">Click the + button to add your first contact</p>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -1524,7 +1646,7 @@ const Contacts = () => {
             </div>
 
             {/* Pagination Component */}
-            {contacts.length > itemsPerPage && (
+            {filteredContacts.length > itemsPerPage && (
               <div className="col-md-12 mt-3">
                 <div className="card p-10 overflow-hidden position-relative radius-12">
                   <ul className="pagination d-flex flex-wrap align-items-center gap-2 justify-content-end mb-0">

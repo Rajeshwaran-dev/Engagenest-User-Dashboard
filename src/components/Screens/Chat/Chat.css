@@ -347,15 +347,6 @@
   min-width: 0;
 }
 
-.chat-details-panel {
-  background: white;
-  width: 380px;
-  border-left: 1px solid #e5e7eb;
-  height: 660px;
-  overflow-y: auto;
-  position: relative;
-}
-
 .panel-content {
   padding: 20px;
 }
@@ -407,28 +398,6 @@
 @media (max-width: 768px) {
   .chat-details-panel {
     width: 100%;
-    position: absolute;
-    right: 0;
-    top: 0;
-    z-index: 10;
-  }
-}
-
-/* Responsive */
-@media (max-width: 1400px) {
-  .chat-details-panel {
-    width: 320px;
-    position: absolute;
-    right: 0;
-    top: 0;
-    z-index: 10;
-  }
-}
-
-/* Responsive */
-@media (max-width: 1200px) {
-  .chat-details-panel {
-    width: 360px;
     position: absolute;
     right: 0;
     top: 0;
@@ -612,7 +581,7 @@
   font-weight: 700;
 }
 .journal-body {
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 400;
 }
 
@@ -1215,7 +1184,7 @@ variables-section h6,
 }
 
 .chat-details-panel {
-  width: 380px;
+  width: 330px;
   border-left: 1px solid #e5e7eb;
   height: 660px;
   overflow-y: auto;
@@ -1236,7 +1205,7 @@ variables-section h6,
 /* Responsive */
 @media (max-width: 1400px) {
   .chat-details-panel {
-    width: 320px;
+    width: 330px;
     position: absolute;
     right: 0;
     top: 0;
@@ -1247,7 +1216,7 @@ variables-section h6,
 /* Responsive */
 @media (max-width: 1200px) {
   .chat-details-panel {
-    width: 360px;
+    width: 320px;
     position: absolute;
     right: 0;
     top: 0;

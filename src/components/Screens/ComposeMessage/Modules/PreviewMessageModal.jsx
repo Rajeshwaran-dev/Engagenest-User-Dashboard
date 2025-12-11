@@ -95,27 +95,7 @@ export default function PreviewMessageModal({
 
   // ✅ FIXED: Proper variable replacement for preview
   const getDisplayMessageContent = () => {
-    if (!previewData.originalMessage) {
-      return previewData.messageContent || "No message content available";
-    }
-
-    let message = previewData.originalMessage;
-
-    // Replace variables with their actual values from form data
-    if (previewData.variableMapping && previewData.csvData && previewData.csvData.length > 0) {
-      const firstRowData = previewData.csvData[0]; // Use first row for preview
-
-      Object.entries(previewData.variableMapping).forEach(([variableName, csvColumn]) => {
-        const placeholder = `{{${variableName}}}`;
-
-        if (csvColumn && firstRowData[csvColumn]) {
-          const value = firstRowData[csvColumn];
-          message = message.replace(new RegExp(placeholder, 'g'), value);
-        }
-      });
-    }
-
-    return message;
+    return previewData.messageContent || "No message content available";
   };
 
   const displayMessageContent = getDisplayMessageContent();

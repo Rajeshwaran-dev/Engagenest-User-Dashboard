@@ -12,6 +12,7 @@ import { useSnackbar } from "notistack";
 import UseTemplateModal from "../Modules/UseTemplateModal";
 import PreviewMessageModal from "../Modules/PreviewMessageModal";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import DateTimePicker from "../../Calendar/DateTimePicker";
 
 const Group = ({ formData, handleChange, handleSubmit, handleClear }) => {
   const { enqueueSnackbar } = useSnackbar();
@@ -958,16 +959,13 @@ const Group = ({ formData, handleChange, handleSubmit, handleClear }) => {
                   <Form.Label className="fw-semibold color-change mb-2">
                     Date and Time
                   </Form.Label>
-                  <Form.Control
-                    type="datetime-local"
-                    name="scheduledDateTime"
-                    value={formData.scheduledDateTime || ""}
-                    onChange={handleChange}
-                    className="py-2"
-                    style={{
-                      borderColor: "#e0e0e0",
-                      borderRadius: "10px",
+                  <DateTimePicker
+                    onDateTimeChange={({ date, time, datetime }) => {
+                      console.log("Selected date:", date);
+                      console.log("Selected time:", time);
+                      console.log("Combined datetime:", datetime);
                     }}
+                    placeholder="Select date and time"
                   />
                 </Form.Group>
               </Col>

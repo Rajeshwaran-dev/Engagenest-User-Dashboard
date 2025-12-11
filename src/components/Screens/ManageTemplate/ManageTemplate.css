@@ -1270,7 +1270,6 @@
 
 .category-btn:hover {
   border-color: var(--primary);
-  color: #3b82f6;
 }
 
 .category-btn.active {

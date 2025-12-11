@@ -181,7 +181,8 @@ const Conversation = () => {
             <div>
               <p className="mb-3">Upgrade to access premium features</p>
               <button
-                onClick={() => setIsUpgradeModalOpen(true)}
+              style={{ cursor: "not-allowed" }}
+                // onClick={() => setIsUpgradeModalOpen(true)}  
                 className="btn-primary"
                 disabled={balanceLoading}
               >
