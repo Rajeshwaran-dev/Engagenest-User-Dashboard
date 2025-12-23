@@ -8,7 +8,7 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 const Description = () => {
   const navigate = useNavigate();
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="ERP Integration" />
       <div className="d-flex align-items-center gap-3" style={{ marginBottom: "20px" }}>
         <button
@@ -39,7 +39,7 @@ const Description = () => {
         solution for entrepreneurs looking to succeed in the digital
         marketplace.
       </p>
-    </MasterLayout>
+    </>
   );
 };
 

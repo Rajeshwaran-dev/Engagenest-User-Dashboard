@@ -118,7 +118,7 @@ const UiContacts = () => {
   const isAllSelected = selectedContacts.length === contacts.length && contacts.length > 0;
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="User Initiated Contacts" />
 
       <div className="d-flex justify-content-between align-items-center mb-4 p-12">
@@ -220,13 +220,13 @@ const UiContacts = () => {
                           <span style={{ cursor: "pointer" }}
                             key={tagIndex}
                             className="contact-badge tag-badge"
-                            
+
                             onClick={() => handleDeleteTag(index, tagIndex)}
                           >
                             {tag} ×
                           </span>
                         ))}
-                        <button 
+                        <button
                           className="contact-badge add-badge"
                           onClick={() => openAddTagModal(index)}
                         >
@@ -304,7 +304,9 @@ const UiContacts = () => {
           </div>
         </div>
       )}
-    </MasterLayout>
+    </>
+
+
   );
 };
 

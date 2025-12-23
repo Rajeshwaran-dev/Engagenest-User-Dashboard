@@ -312,7 +312,7 @@ const ScheduleLogs = () => {
   // If campaign is selected, show detail view
   if (selectedCampaign) {
     return (
-      <MasterLayout>
+      <>
         <Breadcrumb title="Scheduled Reports" />
 
         {/* Action Bar */}
@@ -647,12 +647,14 @@ const ScheduleLogs = () => {
             </div>
           </div>
         </div>
-      </MasterLayout>
+      </>
+
+
     );
   }
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Scheduled Reports" />
 
       {/* Edit Schedule Modal */}
@@ -1006,7 +1008,7 @@ const ScheduleLogs = () => {
           </div>
         </div>
       </div>
-    </MasterLayout>
+    </>
   );
 };
 

@@ -72,7 +72,7 @@ const UserAttributes = () => {
     }
 
     const term = searchTerm.toLowerCase().trim();
-    const filtered = userAttributes.filter(attr => 
+    const filtered = userAttributes.filter(attr =>
       attr.name.toLowerCase().includes(term) ||
       attr.value.toLowerCase().includes(term) ||
       attr.originalName.toLowerCase().includes(term) ||
@@ -456,7 +456,7 @@ const UserAttributes = () => {
   };
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="User Data Fields" />
 
       {/* Search Filter and Action Buttons */}
@@ -464,9 +464,9 @@ const UserAttributes = () => {
         <div className="d-flex align-items-center gap-3">
           {/* Search Input */}
           <div className="position-relative">
-            <Icon 
-              icon="material-symbols:search" 
-              className="position-absolute" 
+            <Icon
+              icon="material-symbols:search"
+              className="position-absolute"
               style={{ left: "12px", top: "50%", transform: "translateY(-50%)", color: "#6b7280", zIndex: "10" }}
             />
             <input
@@ -507,7 +507,7 @@ const UserAttributes = () => {
               Delete Selected ({selectedAttributes.length})
             </button>
           )}
-          
+
           {/* Create Button */}
           <button
             className="btn-primary d-flex align-items-center gap-2"
@@ -617,7 +617,7 @@ const UserAttributes = () => {
                       Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} entries
                     </span>
                   </div>
-                  
+
                   {/* Pagination controls */}
                   <ul className="pagination d-flex flex-wrap align-items-center gap-2 justify-content-end mb-0">
                     <li className="page-item">
@@ -831,7 +831,9 @@ const UserAttributes = () => {
           </div>
         </div>
       )}
-    </MasterLayout>
+    </>
+
+
   );
 };
 

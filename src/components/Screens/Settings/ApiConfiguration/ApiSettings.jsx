@@ -42,7 +42,7 @@ const ApiSettings = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiKeys, setApiKeys] = useState([]);
-  
+
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -88,7 +88,7 @@ const ApiSettings = () => {
     // Apply search filter
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase().trim();
-      result = result.filter(key => 
+      result = result.filter(key =>
         key.name.toLowerCase().includes(term) ||
         key.key.toLowerCase().includes(term)
       );
@@ -420,7 +420,7 @@ const ApiSettings = () => {
   };
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="API Configuration" />
       <div className="col-xxl-12">
         <div className="card h-100">
@@ -503,9 +503,9 @@ const ApiSettings = () => {
                 <div className="d-flex align-items-center gap-3">
                   {/* Search Input */}
                   <div className="position-relative">
-                    <Icon 
-                      icon="material-symbols:search" 
-                      className="position-absolute" 
+                    <Icon
+                      icon="material-symbols:search"
+                      className="position-absolute"
                       style={{ left: "12px", top: "50%", transform: "translateY(-50%)", color: "#6b7280" }}
                     />
                     <input
@@ -553,8 +553,8 @@ const ApiSettings = () => {
                         ) : currentApiKeys.length === 0 ? (
                           <tr>
                             <td colSpan="5" className="text-center">
-                              {filteredApiKeys.length === 0 && apiKeys.length > 0 ? 
-                                "No API keys match your filters" : 
+                              {filteredApiKeys.length === 0 && apiKeys.length > 0 ?
+                                "No API keys match your filters" :
                                 "No API keys found"}
                             </td>
                           </tr>
@@ -809,7 +809,9 @@ const ApiSettings = () => {
           )}
         </div>
       </div>
-    </MasterLayout>
+    </>
+
+
   );
 };
 

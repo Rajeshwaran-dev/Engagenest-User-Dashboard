@@ -234,7 +234,7 @@ const ManageTemplate = () => {
   const isAllSelected = filteredTemplates.length > 0 && selectedTemplates.length === filteredTemplates.length;
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Template Manager" />
 
       <div className="d-flex justify-content-end align-items-center mb-4 gap-3 p-12">
@@ -625,7 +625,7 @@ const ManageTemplate = () => {
           </div>
         </div>
       )}
-    </MasterLayout>
+    </>
   );
 };
 

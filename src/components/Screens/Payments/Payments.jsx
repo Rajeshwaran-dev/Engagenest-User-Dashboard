@@ -11,7 +11,7 @@ const Billing = () => {
   const [showModal, setShowModal] = useState(false);
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Payment Gateway" />
       <div className="col-xxl-12">
         <div className="card h-100">
@@ -85,7 +85,9 @@ const Billing = () => {
           </div>
         </div>
       </div>
-    </MasterLayout>
+    </>
+
+
   );
 };
 

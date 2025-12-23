@@ -379,18 +379,18 @@ const ManageGroups = () => {
 
   if (isLoading) {
     return (
-      <MasterLayout>
+      <>
         <Breadcrumb title="Manage Groups" />
         <div className="text-center p-4">
           <Icon icon="mdi:loading" className="spin" style={{ fontSize: '48px' }} />
           <p className="mt-3">Loading groups...</p>
         </div>
-      </MasterLayout>
+      </>
     );
   }
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Manage Groups" />
 
       <div className="d-flex justify-content-between align-items-center mb-4 p-12">
@@ -519,7 +519,7 @@ const ManageGroups = () => {
         onCopyChange={handleCopyChange}
         availableGroups={availableGroups}
       />
-    </MasterLayout>
+    </>
   );
 };
 

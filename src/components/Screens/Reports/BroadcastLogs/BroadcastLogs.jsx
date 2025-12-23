@@ -267,7 +267,7 @@ const BroadcastLogs = () => {
   // Detail view when campaign is selected
   if (selectedCampaign) {
     return (
-      <MasterLayout>
+      <>
         <Breadcrumb title="Broadcast Reports" />
 
         {/* Action Bar */}
@@ -621,13 +621,13 @@ const BroadcastLogs = () => {
             </div>
           </div>
         </div>
-      </MasterLayout>
+      </>
     );
   }
 
   // Main table view
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Broadcast Reports" />
 
       <div className="col-xxl-12">
@@ -811,7 +811,7 @@ const BroadcastLogs = () => {
           )}
         </div>
       </div>
-    </MasterLayout>
+    </>
   );
 };
 

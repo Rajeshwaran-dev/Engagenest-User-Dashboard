@@ -20,7 +20,7 @@ const Unsubscribe = () => {
   };
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Unsubscribed Users" />
       <div className="col-xxl-12">
         <div className="card h-100">
@@ -212,7 +212,7 @@ const Unsubscribe = () => {
           </div>
         </div>
       )}
-    </MasterLayout>
+    </>
   );
 };
 

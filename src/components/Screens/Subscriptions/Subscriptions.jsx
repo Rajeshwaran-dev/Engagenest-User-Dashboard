@@ -11,7 +11,7 @@ const Subscriptions = () => {
   const [showModal, setShowModal] = useState(false);
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Subscrption Management" />
       <p>Manage your current, upcoming, and expired plans</p>
       <div className="col-xxl-12">
@@ -89,7 +89,9 @@ const Subscriptions = () => {
           </div>
         </div>
       </div>
-    </MasterLayout>
+    </>
+
+
   );
 };
 

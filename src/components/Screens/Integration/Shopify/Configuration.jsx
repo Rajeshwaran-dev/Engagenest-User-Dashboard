@@ -111,7 +111,7 @@ const Configuration = () => {
   };
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Shopify" />
       <div className="configuration-container">
         <div className="container-fluid">
@@ -229,7 +229,7 @@ const Configuration = () => {
           </div>
         </div>
       </div>
-    </MasterLayout>
+    </>
   );
 };
 

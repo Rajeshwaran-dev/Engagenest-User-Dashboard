@@ -1,0 +1,305 @@
+.hoverable-card {
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
+}
+
+.hoverable-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(79, 209, 199, 0.15);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px 16px 16px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.card-title {
+  font-size: clamp(14px, 1.5vw, 16px);
+  font-weight: 600;
+}
+
+.statistic-title {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.chart-subtitle {
+  font-size: 12px;
+  color: #888;
+}
+
+.calendar-navigation {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.calendar-navigation button {
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.calendar-navigation button:hover {
+  background-color: #f0f0f0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .ant-col {
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 14px;
+  }
+
+  .statistic-title {
+    font-size: 11px;
+  }
+}
+
+/* Table styling */
+.ant-table-thead > tr > th {
+  background-color: #fafafa;
+  font-weight: 600;
+  color: #262626;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background-color: #f5f5f5;
+}
+
+/* Card header styling */
+.ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 0 16px;
+}
+
+.ant-card-head-title {
+  padding: 12px 0;
+  font-weight: 600;
+}
+
+/* Custom scrollbar for tables */
+.ant-table-body::-webkit-scrollbar {
+  height: 6px;
+}
+
+.ant-table-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.ant-table-body::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.ant-table-body::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Loading state placeholder */
+.loading-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #999;
+  font-style: italic;
+}
+
+/* Status tag colors */
+.ant-tag {
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Rating stars alignment */
+.ant-rate {
+  font-size: 14px;
+}
+
+/* Avatar styling */
+.ant-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Dropdown menu styling */
+.ant-dropdown-menu {
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.ant-dropdown-menu-item {
+  padding: 8px 16px;
+}
+
+.ant-dropdown-menu-item:hover {
+  background-color: #f5f5f5;
+}
+
+/* Progress bar customization */
+.ant-progress-text {
+  font-size: 12px;
+  color: #666;
+}
+
+/* List item styling */
+.ant-list-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ant-list-item:last-child {
+  border-bottom: none;
+}
+
+/* Breadcrumb styling */
+.ant-breadcrumb {
+  margin-bottom: 16px;
+}
+
+.ant-breadcrumb-link {
+  color: #666;
+}
+/* Select dropdown styling */
+.ant-select-selector {
+  border-radius: 6px;
+  border: 1px solid #d9d9d9;
+}
+
+/* Card body padding adjustment */
+.ant-card-body {
+  padding: 16px;
+}
+
+.ant-breadcrumb-link:hover {
+  color: var(--primary);
+}
+
+.ant-btn-primary {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.ant-btn-primary:hover {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.ant-select-focused .ant-select-selector {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px rgba(20, 146, 56, 0.2);
+}
+
+/* Responsive text sizes */
+@media (max-width: 480px) {
+  .ant-statistic-title {
+    font-size: 11px;
+  }
+
+  .ant-statistic-content {
+    font-size: 16px;
+  }
+
+  .card-title {
+    font-size: 13px;
+  }
+}
+
+.overview-value {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+.overview-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.appointment-dates {
+  position: absolute;
+  bottom: 4px;
+  font-size: 9px;
+  font-weight: bold;
+  color: #211f60;
+}
+
+.sortable-item {
+  transition: all 0.2s ease-in-out;
+}
+.sortable-item:active {
+  cursor: grabbing;
+}
+
+.header-days {
+  font-size: 16px;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.hoverable-stat-card:hover .icon-wrapper {
+  background: rgba(255, 255, 255, 0.3) !important;
+  transform: scale(1.05);
+}
+
+.hoverable-stat-card:hover .icon-wrapper svg {
+  transform: scale(1.1);
+}
+
+.hoverable-stat-card:hover .hover-circle {
+  transform: translate(30%, 30%) scale(1.2);
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* /////////////////////////////// Dark Mode ////////////////////////////// */
+
+html[data-theme="dark"] .overview-title {
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .appointment-dates {
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .overview-value {
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .header-days {
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .button-color {
+  color: var(--primary);
+}
+
+html[data-theme="dark"] .ant-input-outlined,
+.ant-picker-outlined, .ant-input-group.ant-input-group-compact,
+.ant-select.ant-select-outlined {
+  background: var(--input-bg);
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .ant-select .ant-select-content-value,
+.ant-input, label, .ant-modal .ant-modal-title,
+.ant-card .ant-card-head-title,
+.ant-drawer .ant-drawer-title,
+.ant-picker .ant-picker-input > input {
+  color: var(--text-secondary);
+}

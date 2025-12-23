@@ -179,7 +179,7 @@ const ComposeMessage = () => {
 
   // ----------- JSX -------------
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Broadcast" />
       <div className="col-xxl-12 col-xl-12">
         <div className="card h-100">
@@ -222,9 +222,8 @@ const ComposeMessage = () => {
                 <ul className="dropdown-menu">
                   <li>
                     <Link
-                      className={`dropdown-item ${
-                        activeTab === "single-msg" ? "active" : ""
-                      }`}
+                      className={`dropdown-item ${activeTab === "single-msg" ? "active" : ""
+                        }`}
                       to="#"
                       onClick={() => setActiveTab("single-msg")}
                     >
@@ -233,9 +232,8 @@ const ComposeMessage = () => {
                   </li>
                   <li>
                     <Link
-                      className={`dropdown-item ${
-                        activeTab === "group" ? "active" : ""
-                      }`}
+                      className={`dropdown-item ${activeTab === "group" ? "active" : ""
+                        }`}
                       to="#"
                       onClick={() => setActiveTab("group")}
                     >
@@ -244,9 +242,8 @@ const ComposeMessage = () => {
                   </li>
                   <li>
                     <Link
-                      className={`dropdown-item ${
-                        activeTab === "csv" ? "active" : ""
-                      }`}
+                      className={`dropdown-item ${activeTab === "csv" ? "active" : ""
+                        }`}
                       to="#"
                       onClick={() => setActiveTab("csv")}
                     >
@@ -267,7 +264,7 @@ const ComposeMessage = () => {
         rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
       />
-    </MasterLayout>
+    </>
   );
 };
 

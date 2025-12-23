@@ -8,13 +8,13 @@ const HomePageTwo = () => {
   return (
     <>
       {/* MasterLayout */}
-      <MasterLayout>
+      
         {/* Breadcrumb */}
         <section className="row gy-4">
           <Conversation />
           <BroadcastMessage />
         </section>
-      </MasterLayout>
+      
     </>
   );
 };

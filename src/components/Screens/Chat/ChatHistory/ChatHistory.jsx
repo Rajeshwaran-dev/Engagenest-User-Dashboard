@@ -461,7 +461,7 @@ const ChatHistory = () => {
   };
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Past Chats" />
 
       <div className="chat-wrapper">
@@ -758,7 +758,7 @@ const ChatHistory = () => {
           onTemplateSend={handleTemplateSend}
         />
       )}
-    </MasterLayout>
+    </>
   );
 };
 

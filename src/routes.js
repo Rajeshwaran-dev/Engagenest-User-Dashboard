@@ -27,9 +27,9 @@ const LoadingSpinner = () => (
 // Layout wrapper component
 const LayoutWrapper = () => {
   return (
-    <MasterLayout>
+    
       <Outlet />
-    </MasterLayout>
+    
   );
 };
 
@@ -41,9 +41,9 @@ const AppRoutes = () => {
       
       {/* Dashboard route without layout */}
       <Route path="/Dashboard" element={
-        <MasterLayout>
+        
           <Dashboard />
-        </MasterLayout>
+        
       } />
 
       {/* All other routes with layout */}
@@ -88,9 +88,9 @@ const AppRoutesWithLazyLoading = () => {
 
   const LayoutWrapper = () => {
     return (
-      <MasterLayout>
+      
         <Outlet />
-      </MasterLayout>
+      
     );
   };
 
@@ -100,9 +100,9 @@ const AppRoutesWithLazyLoading = () => {
         <Route path="/" element={<Navigate to="/Dashboard" replace />} />
         
         <Route path="/Dashboard" element={
-          <MasterLayout>
+          
             <Dashboard />
-          </MasterLayout>
+          
         } />
 
         <Route path="/" element={<LayoutWrapper />}>

@@ -1248,7 +1248,7 @@ const Contacts = () => {
 
   if (!isAuthenticated) {
     return (
-      <MasterLayout>
+      <>
         <Breadcrumb title="Contact Group" />
         <div className="text-center p-4">
           <Icon icon="mdi:alert-circle" style={{ fontSize: '48px', color: '#faad14' }} className="mb-3" />
@@ -1261,7 +1261,7 @@ const Contacts = () => {
             Go to Login
           </button>
         </div>
-      </MasterLayout>
+      </>
     );
   }
 
@@ -1289,7 +1289,7 @@ const Contacts = () => {
     }
 
     return (
-      <MasterLayout>
+      <>
         <Breadcrumb title="Contact Group" />
         <div className="text-center p-4">
           <Icon icon="mdi:alert-circle" style={{ fontSize: '48px', color: '#ff4d4f' }} className="mb-3" />
@@ -1308,24 +1308,24 @@ const Contacts = () => {
             </button>
           </div>
         </div>
-      </MasterLayout>
+      </>
     );
   }
 
   if (contactsLoading || groupsLoading) {
     return (
-      <MasterLayout>
+      <>
         <Breadcrumb title="Contact Group" />
         <div className="text-center p-4">
           <Icon icon="mdi:loading" className="spin" style={{ fontSize: '48px' }} />
           <p className="mt-3">Loading contacts...</p>
         </div>
-      </MasterLayout>
+      </>
     );
   }
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Contact Group" />
       <div>
         {/* Results Count and Action Buttons */}
@@ -1747,7 +1747,7 @@ const Contacts = () => {
           </div>
         )}
       </div>
-    </MasterLayout>
+    </>
   );
 };
 

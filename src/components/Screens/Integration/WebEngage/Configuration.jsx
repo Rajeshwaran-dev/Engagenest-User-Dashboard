@@ -142,7 +142,7 @@ const Configuration = () => {
   };
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Webengage" />
       <div className="configuration-container">
         <div className="container-fluid">
@@ -252,7 +252,7 @@ const Configuration = () => {
           </div>
         </div>
       </div>
-    </MasterLayout>
+    </>
   );
 };
 

@@ -42,7 +42,7 @@ const Flow = () => {
   ];
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Shopify" />
       <div className="flow-container">
         <div className="flow-content">
@@ -103,7 +103,9 @@ const Flow = () => {
           </div>
         </div>
       </div>
-    </MasterLayout>
+    </>
+
+
   );
 };
 

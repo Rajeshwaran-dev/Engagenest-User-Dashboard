@@ -30,7 +30,7 @@ const DialogFlow = () => {
   };
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Dialogflow Integration" />
       <div className="container mt-4">
         <div className="row justify-content-center">
@@ -74,7 +74,7 @@ const DialogFlow = () => {
           </div>
         </div>
       </div>
-    </MasterLayout>
+    </>
   );
 };
 

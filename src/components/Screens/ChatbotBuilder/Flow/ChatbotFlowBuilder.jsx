@@ -171,13 +171,13 @@ const ChatbotFlowBuilder = () => {
           const updatedChatbots = chatbots.map((chatbot) =>
             chatbot.id === chatbotId
               ? {
-                  ...chatbot,
-                  flowData: {
-                    nodes: currentNodes || nodes,
-                    edges: currentEdges || edges,
-                  },
-                  updatedAt: new Date().toISOString(),
-                }
+                ...chatbot,
+                flowData: {
+                  nodes: currentNodes || nodes,
+                  edges: currentEdges || edges,
+                },
+                updatedAt: new Date().toISOString(),
+              }
               : chatbot
           );
           localStorage.setItem("chatbots", JSON.stringify(updatedChatbots));
@@ -289,9 +289,8 @@ const ChatbotFlowBuilder = () => {
       questions.forEach((question, index) => {
         const questionKey = question.key || `Question ${index + 1}`;
         const questionValue = question.value || "";
-        const childNodeId = `${parentNodeId}-question-${
-          index + 1
-        }-${Date.now()}`;
+        const childNodeId = `${parentNodeId}-question-${index + 1
+          }-${Date.now()}`;
 
         const childNode = {
           id: childNodeId,
@@ -359,9 +358,8 @@ const ChatbotFlowBuilder = () => {
       const startY = parentNode.position.y + verticalSpacing;
 
       paymentButtons.forEach((button, index) => {
-        const childNodeId = `${parentNodeId}-payment-${
-          button.id
-        }-${Date.now()}`;
+        const childNodeId = `${parentNodeId}-payment-${button.id
+          }-${Date.now()}`;
 
         const childNode = {
           id: childNodeId,
@@ -415,15 +413,15 @@ const ChatbotFlowBuilder = () => {
           nds.map((node) =>
             node.id === selectedNode.id
               ? {
-                  ...node,
-                  data: {
-                    ...node.data,
-                    ...data,
-                    label: data.nodeName || node.data.label,
-                    onDelete: handleDeleteNode,
-                    showDelete: node.data?.parentNodeId ? true : false,
-                  },
-                }
+                ...node,
+                data: {
+                  ...node.data,
+                  ...data,
+                  label: data.nodeName || node.data.label,
+                  onDelete: handleDeleteNode,
+                  showDelete: node.data?.parentNodeId ? true : false,
+                },
+              }
               : node
           )
         );
@@ -551,21 +549,21 @@ const ChatbotFlowBuilder = () => {
 
       return () => clearTimeout(autoSaveTimer);
     }
-  }, [nodes, edges, chatbotId, isLoading, saveFlowToChatbot ]);
+  }, [nodes, edges, chatbotId, isLoading, saveFlowToChatbot]);
 
   if (isLoading) {
     return (
-      <MasterLayout>
+      <>
         <Breadcrumb title="Automation" />
         <div className="flow-wrapper">
           <div className="text-center p-4">Loading chatbot flow...</div>
         </div>
-      </MasterLayout>
+      </>
     );
   }
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Automation" />
       <div className="flow-wrapper">
         <div className="flow-header">
@@ -620,7 +618,7 @@ const ChatbotFlowBuilder = () => {
           onClose={() => setShowResponseModal(false)}
         />
       </div>
-    </MasterLayout>
+    </>
   );
 };
 

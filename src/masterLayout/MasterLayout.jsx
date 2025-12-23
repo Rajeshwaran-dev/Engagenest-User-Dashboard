@@ -2,159 +2,116 @@ import React, { useEffect, useState, useRef } from "react";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import ThemeToggleButton from "../helper/ThemeToggleButton";
-import Spinner from "../components/Spinner";
-import { useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { useGetUserDetailsQuery } from "../store/ApiFilesV2/UserApis";
 
 const MasterLayout = ({ children }) => {
   const navigate = useNavigate();
   let [sidebarActive, seSidebarActive] = useState(false);
   let [mobileMenu, setMobileMenu] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const location = useLocation();
-  const sidebarMenuRef = useRef(null); // Ref for the scrollable menu container
+  const sidebarMenuRef = useRef(null);
 
   const { data: userDetails, isLoading: userDetailsLoading } = useGetUserDetailsQuery();
 
   const wabaNumber = userDetails?.data?.businessWhatsappNumber || "Not configured";
-  const wabaStatus = userDetails?.data?.whatsappStatus || "inactive"; // optional field
-
-  // Determine UI label & color
+  const wabaStatus = userDetails?.data?.whatsappStatus || "inactive";
   const isActive = wabaStatus?.toLowerCase() === "active";
 
-  // Only show loading for main content, not sidebar
   useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 100); // Small delay for smoother transition
-
-    return () => clearTimeout(timer);
-  }, [location.pathname]); // Only trigger on pathname changes
+    setIsTransitioning(true);
+    requestAnimationFrame(() => {
+      setIsTransitioning(false);
+    });
+  }, [location.pathname]);
 
   useEffect(() => {
     const handleDropdownClick = (event) => {
       event.preventDefault();
       const clickedLink = event.currentTarget;
       const clickedDropdown = clickedLink.closest(".dropdown");
-
       if (!clickedDropdown) return;
 
       const isActive = clickedDropdown.classList.contains("open");
 
-      // Close all dropdowns
+      // Close all dropdowns first
       const allDropdowns = document.querySelectorAll(".sidebar-menu .dropdown");
       allDropdowns.forEach((dropdown) => {
         dropdown.classList.remove("open");
         const submenu = dropdown.querySelector(".sidebar-submenu");
-        if (submenu) {
-          submenu.style.maxHeight = "0px"; // Collapse submenu
-        }
+        if (submenu) submenu.style.maxHeight = "0px";
       });
 
-      // Toggle the clicked dropdown
+      // Open clicked dropdown if it was closed
       if (!isActive) {
         clickedDropdown.classList.add("open");
         const submenu = clickedDropdown.querySelector(".sidebar-submenu");
-        if (submenu) {
-          submenu.style.maxHeight = `${submenu.scrollHeight}px`; // Expand submenu
-        }
+        if (submenu) submenu.style.maxHeight = `${submenu.scrollHeight}px`;
 
-        // 🚀 SCROLL LOGIC CHANGE: Scroll to the 'start' (top) of the clicked element
+        // Smooth scroll into view
         setTimeout(() => {
           if (sidebarMenuRef.current) {
-            // Scroll the clicked dropdown element into the view of its container
             clickedDropdown.scrollIntoView({
-              behavior: 'smooth',
-              block: 'start' // 👈 'start' ஆக மாற்றப்பட்டுள்ளது. இதனால் துணை மெனுக்கள் தெளிவாக தெரியும்.
+              behavior: "smooth",
+              block: "start",
             });
           }
-        }, 300); // Small delay to ensure max-height transition starts first
+        }, 300);
       }
     };
 
-    // Attach click event listeners to all dropdown triggers
     const dropdownTriggers = document.querySelectorAll(
-      ".sidebar-menu .dropdown > a, .sidebar-menu .dropdown > Link"
+      ".sidebar-menu .dropdown > a"
     );
-
     dropdownTriggers.forEach((trigger) => {
       trigger.addEventListener("click", handleDropdownClick);
     });
 
+    /** ✅ FIXED openActiveDropdown */
     const openActiveDropdown = () => {
       const currentPath = location.pathname;
 
-      // treat these routes as part of the Contacts > Contact Groups parent
-      const contactGroupPaths = ["/contact", "/managegroups"];
-
-      // treat these routes as part of Catalog > Product Catalog parent
-      const catalogPaths = ["/catalog", "/products"];
-
-      let activeDropdownOpened = false; // Flag to check if we found and opened an active dropdown
-
+      // Close all open dropdowns first
       const allDropdowns = document.querySelectorAll(".sidebar-menu .dropdown");
       allDropdowns.forEach((dropdown) => {
-        const submenuLinks = dropdown.querySelectorAll(".sidebar-submenu li a");
+        dropdown.classList.remove("open");
+        const submenu = dropdown.querySelector(".sidebar-submenu");
+        if (submenu) submenu.style.maxHeight = "0px";
+      });
 
+      // Open the parent dropdown whose submenu matches the route
+      allDropdowns.forEach((dropdown) => {
+        const submenuLinks = dropdown.querySelectorAll(".sidebar-submenu li a");
         submenuLinks.forEach((link) => {
           const href = link.getAttribute("href");
           const to = link.getAttribute("to");
 
-          // Special rule for Contacts -> Contact Groups
+          // Match route exactly or nested (e.g. /tickets/123)
           if (
-            contactGroupPaths.includes(currentPath) &&
-            (href === "/contact" || to === "/contact")
+            currentPath === href ||
+            currentPath === to ||
+            currentPath.startsWith(`${href}/`) ||
+            currentPath.startsWith(`${to}/`)
           ) {
             dropdown.classList.add("open");
             const submenu = dropdown.querySelector(".sidebar-submenu");
             if (submenu) submenu.style.maxHeight = `${submenu.scrollHeight}px`;
-            activeDropdownOpened = true; // Set flag
-            return;
-          }
 
-          // Special rule for Catalog -> Product Catalog
-          if (
-            catalogPaths.includes(currentPath) &&
-            (href === "/catalog" || to === "/catalog")
-          ) {
-            dropdown.classList.add("open");
-            const submenu = dropdown.querySelector(".sidebar-submenu");
-            if (submenu) submenu.style.maxHeight = `${submenu.scrollHeight}px`;
-            activeDropdownOpened = true; // Set flag
-            return;
-          }
-
-          // Default behavior: open dropdown when one of its links exactly matches currentPath
-          if (href === currentPath || to === currentPath) {
-            dropdown.classList.add("open");
-            const submenu = dropdown.querySelector(".sidebar-submenu");
-            if (submenu) submenu.style.maxHeight = `${submenu.scrollHeight}px`;
-            activeDropdownOpened = true; // Set flag
-            return;
+            // Auto scroll open dropdown into view
+            setTimeout(() => {
+              dropdown.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
+            }, 150);
           }
         });
       });
-
-      // 🚀 SCROLL LOGIC CHANGE: Scroll to the 'start' (top) of the active element on page load/path change
-      if (activeDropdownOpened && sidebarMenuRef.current) {
-        // Find the actively open dropdown
-        const openDropdown = document.querySelector(".sidebar-menu .dropdown.open");
-        if (openDropdown) {
-          setTimeout(() => { // Small delay to ensure max-height animation completes
-            openDropdown.scrollIntoView({
-              behavior: 'smooth',
-              block: 'start' // 👈 'start' ஆக மாற்றப்பட்டுள்ளது.
-            });
-          }, 150);
-        }
-      }
     };
 
-    // Open the submenu that contains the active route
     openActiveDropdown();
 
-    // Cleanup event listeners on unmount
     return () => {
       dropdownTriggers.forEach((trigger) => {
         trigger.removeEventListener("click", handleDropdownClick);
@@ -162,14 +119,12 @@ const MasterLayout = ({ children }) => {
     };
   }, [location.pathname]);
 
+
   const handleLogout = () => {
-    // Remove any authentication data
     localStorage.removeItem("loginData");
     sessionStorage.clear();
-
-    // Force redirect & clear browser history
     navigate("/", { replace: true });
-    window.location.reload(); // optional to fully reset app state
+    window.location.reload();
   };
 
   let sidebarControl = () => {
@@ -181,8 +136,8 @@ const MasterLayout = ({ children }) => {
   };
 
   return (
-    <section className={mobileMenu ? "overlay active" : "overlay "}>
-      {/* sidebar - This remains static during navigation */}
+    <section className={mobileMenu ? "overlay active" : "overlay"}>
+      {/* sidebar */}
       <aside
         className={
           sidebarActive
@@ -202,25 +157,25 @@ const MasterLayout = ({ children }) => {
         <div>
           <Link to="/dashboard" className="sidebar-logo">
             <img
-              src="assets/images/main-logo.png"
+              src="/assets/images/main-logo.png"
               alt="site logo"
               className="light-logo"
             />
             <img
-              src="assets/images/dark-logo.png"
+              src="/assets/images/dark-logo.png"
               alt="site logo"
               className="dark-logo"
             />
             <img
-              src="assets/images/logo.png"
+              src="/assets/images/logo.png"
               alt="site logo"
               className="logo-icon"
             />
           </Link>
         </div>
-        {/* Attach the ref to the scrollable container */}
         <div className="sidebar-menu-area" ref={sidebarMenuRef}>
           <ul className="sidebar-menu" id="sidebar-menu">
+            {/* ✅ FIXED: Keep ALL sidebar menu items exactly as they were */}
             <li className="menu-item">
               <NavLink
                 to="/dashboard"
@@ -258,7 +213,7 @@ const MasterLayout = ({ children }) => {
                       navData.isActive ? "active-page" : ""
                     }
                   >
-                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />{" "}
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
                     Live Chats
                   </NavLink>
                 </li>
@@ -280,7 +235,7 @@ const MasterLayout = ({ children }) => {
                       navData.isActive ? "active-page" : ""
                     }
                   >
-                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />{" "}
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
                     Manage Agents
                   </NavLink>
                 </li>
@@ -301,7 +256,7 @@ const MasterLayout = ({ children }) => {
                       navData.isActive ? "active-page" : ""
                     }
                   >
-                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />{" "}
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
                     Contact Groups
                   </NavLink>
                 </li>
@@ -323,7 +278,7 @@ const MasterLayout = ({ children }) => {
                       navData.isActive ? "active-page" : ""
                     }
                   >
-                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />{" "}
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
                     Unsubscribed Users
                   </NavLink>
                 </li>
@@ -354,7 +309,7 @@ const MasterLayout = ({ children }) => {
                       navData.isActive ? "active-page" : ""
                     }
                   >
-                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />{" "}
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
                     Broadcast Reports
                   </NavLink>
                 </li>
@@ -376,7 +331,7 @@ const MasterLayout = ({ children }) => {
                       navData.isActive ? "active-page" : ""
                     }
                   >
-                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />{" "}
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
                     Scheduled Reports
                   </NavLink>
                 </li>
@@ -400,7 +355,6 @@ const MasterLayout = ({ children }) => {
               <NavLink
                 to="/automation"
                 className={(navData) => {
-                  // treat automation & chatbot-builder related routes as "active" for the Automation parent
                   const path = location.pathname || "";
                   const automationPrefixes = [
                     "/automation",
@@ -435,7 +389,6 @@ const MasterLayout = ({ children }) => {
               <NavLink
                 to="/integration"
                 className={(navData) => {
-                  // treat integration-related routes as "active" for the Integrations Hub parent
                   const path = location.pathname || "";
                   const integrationPrefixes = ["/integration", "/shopify", "/woocommerce", "/webengage"];
                   const isIntegrationRoute = integrationPrefixes.some(prefix => path.startsWith(prefix));
@@ -448,6 +401,148 @@ const MasterLayout = ({ children }) => {
                 />
                 <span>Integrations Hub</span>
               </NavLink>
+            </li>
+
+            {/* Leads Dropdown */}
+            <li className="dropdown menu-item">
+              <Link to="#">
+                <Icon icon="mdi:leads-outline" className="menu-icon" />
+                <span>Leads</span>
+              </Link>
+              <ul className="sidebar-submenu">
+                <li className="submenu-item">
+                  <NavLink
+                    to="/leads-dashboard"
+                    className={(navData) =>
+                      navData.isActive ? "active-page" : ""
+                    }
+                  >
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
+                    Dashboard
+                  </NavLink>
+                </li>
+                <li className="submenu-item">
+                  <NavLink
+                    to="/leads"
+                    className={(navData) =>
+                      navData.isActive ? "active-page" : ""
+                    }
+                  >
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
+                    Leads
+                  </NavLink>
+                </li>
+                <li className="submenu-item">
+                  <NavLink
+                    to="/leads-configuration"
+                    className={(navData) =>
+                      navData.isActive ? "active-page" : ""
+                    }
+                  >
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
+                    Configuration
+                  </NavLink>
+                </li>
+              </ul>
+            </li>
+
+            {/* Appointments Dropdown */}
+            <li className="dropdown menu-item">
+              <Link to="#">
+                <Icon icon="hugeicons:appointment-02" className="menu-icon" />
+                <span>Appointments</span>
+              </Link>
+              <ul className="sidebar-submenu">
+                <li className="submenu-item">
+                  <NavLink
+                    to="/appointments-dashboard"
+                    className={(navData) =>
+                      navData.isActive ? "active-page" : ""
+                    }
+                  >
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
+                    Dashboard
+                  </NavLink>
+                </li>
+                <li className="submenu-item">
+                  <NavLink
+                    to="/bookings"
+                    className={(navData) =>
+                      navData.isActive ? "active-page" : ""
+                    }
+                  >
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
+                    Bookings
+                  </NavLink>
+                </li>
+                <li className="submenu-item">
+                  <NavLink
+                    to="/appointment-payments"
+                    className={(navData) =>
+                      navData.isActive ? "active-page" : ""
+                    }
+                  >
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
+                    Payments
+                  </NavLink>
+                </li>
+                <li className="submenu-item">
+                  <NavLink
+                    to="/appointments-configuration"
+                    className={(navData) =>
+                      navData.isActive ? "active-page" : ""
+                    }
+                  >
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
+                    Configuration
+                  </NavLink>
+                </li>
+              </ul>
+            </li>
+
+            {/* Ticketing Dropdown */}
+            <li className="dropdown menu-item">
+              <Link to="#">
+                <Icon icon="streamline-ultimate:ticket-1" className="menu-icon" />
+                <span>Ticketing</span>
+              </Link>
+              <ul className="sidebar-submenu">
+                <li className="submenu-item">
+                  <NavLink
+                    to="/ticketing-dashboard"
+                    className={(navData) =>
+                      navData.isActive ? "active-page" : ""
+                    }
+                  >
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
+                    Dashboard
+                  </NavLink>
+                </li>
+                <li className="submenu-item">
+                  <NavLink
+                    to="/tickets"
+                    className={(navData) => {
+                      const path = location.pathname || "";
+                      const isTicketsRoute = path === "/tickets" || path.startsWith("/tickets/");
+                      return (navData.isActive || isTicketsRoute) ? "active-page" : "";
+                    }}
+                  >
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
+                    Tickets
+                  </NavLink>
+                </li>
+                <li className="submenu-item">
+                  <NavLink
+                    to="/ticketing-configuration"
+                    className={(navData) =>
+                      navData.isActive ? "active-page" : ""
+                    }
+                  >
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
+                    Ticket Settings
+                  </NavLink>
+                </li>
+              </ul>
             </li>
 
             <li className="menu-item">
@@ -488,7 +583,7 @@ const MasterLayout = ({ children }) => {
                       navData.isActive ? "active-page" : ""
                     }
                   >
-                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />{" "}
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
                     Customer Orders
                   </NavLink>
                 </li>
@@ -533,21 +628,10 @@ const MasterLayout = ({ children }) => {
                       navData.isActive ? "active-page" : ""
                     }
                   >
-                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />{" "}
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
                     QR Code
                   </NavLink>
                 </li>
-                {/* <li className="submenu-item">
-                  <NavLink
-                    to="/dialogflow"
-                    className={(navData) =>
-                      navData.isActive ? "active-page" : ""
-                    }
-                  >
-                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />{" "}
-                    Dialogflow Integration
-                  </NavLink>
-                </li> */}
                 <li className="submenu-item">
                   <NavLink
                     to="/apisettings"
@@ -555,7 +639,7 @@ const MasterLayout = ({ children }) => {
                       navData.isActive ? "active-page" : ""
                     }
                   >
-                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />{" "}
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
                     API Configuration
                   </NavLink>
                 </li>
@@ -566,7 +650,7 @@ const MasterLayout = ({ children }) => {
                       navData.isActive ? "active-page" : ""
                     }
                   >
-                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />{" "}
+                    <i className="ri-circle-fill circle-icon text-primary-600 w-auto" />
                     User Data Fields
                   </NavLink>
                 </li>
@@ -580,6 +664,7 @@ const MasterLayout = ({ children }) => {
         className={sidebarActive ? "dashboard-main active" : "dashboard-main"}
       >
         <div className="navbar-header">
+          {/* Keep your existing navbar header code exactly as it was */}
           <div className="row align-items-center justify-content-between">
             <div className="col-auto">
               <div className="d-flex flex-wrap align-items-center gap-4">
@@ -608,7 +693,6 @@ const MasterLayout = ({ children }) => {
                   <Icon icon="heroicons:bars-3-solid" className="icon" />
                 </button>
 
-                {/* Compact Q WABA Number Section */}
                 <div className="d-flex align-items-center flex-wrap gap-3 ms-2 responsive-info-bar">
                   {/* WABA Number */}
                   <div className="d-flex align-items-center gap-1">
@@ -683,14 +767,11 @@ const MasterLayout = ({ children }) => {
                     );
                   })()}
                 </div>
-
               </div>
             </div>
             <div className="col-auto">
               <div className="d-flex flex-wrap align-items-center gap-3">
-                {/* ThemeToggleButton */}
                 <ThemeToggleButton />
-                {/* Notification dropdown end */}
                 <div className="dropdown">
                   <button
                     className="d-flex justify-content-center align-items-center rounded-circle"
@@ -704,7 +785,7 @@ const MasterLayout = ({ children }) => {
                       Engagenest
                     </h6>
                     <img
-                      src="assets/images/logo.png"
+                      src="/assets/images/logo.png"
                       alt="image_user"
                       className="w-40-px h-40-px object-fit-cover rounded-circle"
                     />
@@ -725,7 +806,7 @@ const MasterLayout = ({ children }) => {
                             style={{ fontWeight: "600", fontSize: "16px" }}
                             icon="solar:user-linear"
                             className="icon text-xl"
-                          />{" "}
+                          />
                           My Profile
                         </Link>
                       </li>
@@ -739,7 +820,7 @@ const MasterLayout = ({ children }) => {
                             style={{ fontWeight: "600", fontSize: "16px" }}
                             icon="icon-park-outline:plan"
                             className="icon text-xl"
-                          />{" "}
+                          />
                           Subscriptions
                         </Link>
                       </li>
@@ -753,22 +834,34 @@ const MasterLayout = ({ children }) => {
                             style={{ fontWeight: "600", fontSize: "16px" }}
                             icon="lucide:power"
                             className="icon text-xl"
-                          />{" "}
+                          />
                           Log Out
                         </button>
                       </li>
                     </ul>
                   </div>
                 </div>
-                {/* Profile dropdown end */}
               </div>
             </div>
           </div>
         </div>
 
-        {/* dashboard-main-body - Only this part shows loading */}
         <div className="dashboard-main-body">
-          {children}
+          {isTransitioning && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '3px',
+              background: 'linear-gradient(to right, var(--primary), transparent)',
+              zIndex: 9999,
+              animation: 'slideIn 0.3s ease-out'
+            }} />
+          )}
+
+          {/* ✅ CRITICAL FIX: Use Outlet for nested routes */}
+          <Outlet />
         </div>
         <footer className="d-footer"></footer>
       </main>

@@ -5,7 +5,7 @@ import Breadcrumb from "./Breadcrumb";
 
 const ErrorLayer = () => {
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Page Not Found" />
       <div className="card basic-data-table">
         <div className="card-body py-80 px-32 text-center">
@@ -19,7 +19,9 @@ const ErrorLayer = () => {
           </Link>
         </div>
       </div>
-    </MasterLayout>
+    </>
+
+
   );
 };
 

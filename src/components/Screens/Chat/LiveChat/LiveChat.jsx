@@ -685,7 +685,7 @@ const LiveChat = () => {
   const showInterveneButton = currentChat.needsIntervention && !isIntervened;
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Live Chats" />
 
       <div className="chat-wrapper">
@@ -1169,7 +1169,7 @@ const LiveChat = () => {
           onTemplateSelect={handleQuickReplySelect}
         />
       )}
-    </MasterLayout>
+    </>
   );
 };
 

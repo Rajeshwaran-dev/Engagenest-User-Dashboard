@@ -154,7 +154,7 @@ const ChatbotBuilder = () => {
   };
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Automation" />
 
       <div className="d-flex justify-content-between align-items-center mb-4 gap-3 p-12">
@@ -388,7 +388,7 @@ const ChatbotBuilder = () => {
         itemName={chatbotToDelete?.name || ""}
         itemType="chatbot"
       />
-    </MasterLayout>
+    </>
   );
 };
 

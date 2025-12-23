@@ -7,7 +7,7 @@ import FlowsTab from "./../Modules/FlowTab";
 
 const WhatsappFlows = () => {
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Whatsapp Form" />
       <div className="col-xxl-12">
         <div className="card h-100">
@@ -29,9 +29,9 @@ const WhatsappFlows = () => {
                   aria-selected="true"
                 >
                   <Icon
-                      className="icon-adjustments"
-                      icon="carbon:flow"
-                    />
+                    className="icon-adjustments"
+                    icon="carbon:flow"
+                  />
                   Flows
                 </button>
               </li>
@@ -48,9 +48,9 @@ const WhatsappFlows = () => {
                   tabIndex={-1}
                 >
                   <Icon
-                      className="icon-adjustments"
-                      icon="ri:question-answer-line"
-                    />
+                    className="icon-adjustments"
+                    icon="ri:question-answer-line"
+                  />
                   Response
                 </button>
               </li>
@@ -81,9 +81,7 @@ const WhatsappFlows = () => {
           </div>
         </div>
       </div>
-
-      
-    </MasterLayout>
+    </>
   );
 };
 

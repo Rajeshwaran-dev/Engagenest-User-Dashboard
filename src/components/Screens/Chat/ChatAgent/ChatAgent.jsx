@@ -366,19 +366,21 @@ const ChatAgent = () => {
 
   if (isLoading) {
     return (
-      <MasterLayout>
+      <>
         <Breadcrumb title="Manage Agent" />
         <div className="d-flex justify-content-center my-5">
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
         </div>
-      </MasterLayout>
+      </>
+
+
     );
   }
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Manage Agent" />
 
       {/* Add Chat Agent Button */}
@@ -457,74 +459,78 @@ const ChatAgent = () => {
       </div>
 
       {/* Add/Edit Agent Modal */}
-      {showModal && (
-        <AddEditAgentModal
-          showModal={showModal}
-          handleCancel={handleCancel}
-          handleSubmit={handleSubmit}
-          formData={formData}
-          handleInputChange={handleInputChange}
-          editingAgent={formData.mode === "edit"}
-          isLoading={isCreating || isEditing}
-        />
-      )}
+      {
+        showModal && (
+          <AddEditAgentModal
+            showModal={showModal}
+            handleCancel={handleCancel}
+            handleSubmit={handleSubmit}
+            formData={formData}
+            handleInputChange={handleInputChange}
+            editingAgent={formData.mode === "edit"}
+            isLoading={isCreating || isEditing}
+          />
+        )
+      }
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div
-          className="modal fade show d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-          tabIndex="-1"
-        >
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content" style={{ width: "500px" }}>
-              <div className="modal-header">
-                <h3 className="modal-title">Delete Confirmation</h3>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={handleDeleteCancel}
-                  disabled={isDeleting}
-                >
-                  <Icon icon="mingcute:close-line" />
-                </button>
-              </div>
-              <div className="modal-body">
-                <div className="">
-                  <h6 className="mb-3 text-primary-2">
-                    Are you sure you want to delete this agent?
-                  </h6>
+      {
+        showDeleteModal && (
+          <div
+            className="modal fade show d-block"
+            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+            tabIndex="-1"
+          >
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content" style={{ width: "500px" }}>
+                <div className="modal-header">
+                  <h3 className="modal-title">Delete Confirmation</h3>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={handleDeleteCancel}
+                    disabled={isDeleting}
+                  >
+                    <Icon icon="mingcute:close-line" />
+                  </button>
                 </div>
-              </div>
-              <div className="modal-footer justify-content-end">
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={handleDeleteCancel}
-                  disabled={isDeleting}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="btn-primary"
-                  onClick={handleDeleteConfirm}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2"></span>
-                      Deleting...
-                    </>
-                  ) : (
-                    "Delete"
-                  )}
-                </button>
+                <div className="modal-body">
+                  <div className="">
+                    <h6 className="mb-3 text-primary-2">
+                      Are you sure you want to delete this agent?
+                    </h6>
+                  </div>
+                </div>
+                <div className="modal-footer justify-content-end">
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={handleDeleteCancel}
+                    disabled={isDeleting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={handleDeleteConfirm}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2"></span>
+                        Deleting...
+                      </>
+                    ) : (
+                      "Delete"
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Change Password Modal */}
       <ChangePasswordModal
@@ -536,7 +542,7 @@ const ChatAgent = () => {
         handleSubmit={handlePasswordChangeSubmit}
         isLoading={isChangingPassword}
       />
-    </MasterLayout>
+    </>
   );
 };
 

@@ -191,7 +191,7 @@ const FailoverTrigger = () => {
   };
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Failover Trigger" />
       <div className="col-xxl-12">
         <div className="card h-100">
@@ -569,7 +569,9 @@ const FailoverTrigger = () => {
           </div>
         </div>
       </div>
-    </MasterLayout>
+    </>
+
+
   );
 };
 

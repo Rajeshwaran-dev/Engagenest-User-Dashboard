@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import RouteScrollToTop from "./helper/RouteScrollToTop";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -32,12 +32,12 @@ import WhatsAppQRGenerator from "./components/Screens/Settings/QrCode/QrCode";
 import ChatbotBuilder from "./components/Screens/ChatbotBuilder/Table/ChatbotTable";
 import Products from "./components/Screens/Catalog/ProductCatalog/Products";
 
-// Shopify Components - Correct paths based on your file structure
+// Shopify Components
 import ShopifyDescription from "./components/Screens/Integration/Shopify/Description";
 import ShopifyConfiguration from "./components/Screens/Integration/Shopify/Configuration";
 import ShopifyFlow from "./components/Screens/Integration/Shopify/Flow";
 
-// WooCommerce Components - Correct paths based on your file structure
+// WooCommerce Components
 import WooCommerceDescription from "./components/Screens/Integration/WooCommerce/Description";
 import WooCommerceConfiguration from "./components/Screens/Integration/WooCommerce/Configuration";
 import WooCommerceFlow from "./components/Screens/Integration/WooCommerce/Flow";
@@ -52,28 +52,26 @@ import ChatbotFlowBuilder from "./components/Screens/ChatbotBuilder/Flow/Chatbot
 import ErrorLayer from "./components/ErrorLayer";
 import Subscriptions from "./components/Screens/Subscriptions/Subscriptions";
 
+// Leads
+import LeadsDashboard from "./components/Screens/Leads/LeadsDashboard";
+import Leads from "./components/Screens/Leads/Leads";
+import LeadsSetup from "./components/Screens/Leads/LeadsSetup";
+
+// Appointments
+import AppointmentDashboard from "./components/Screens/Appointments/AppointmentDashboard";
+import Bookings from "./components/Screens/Appointments/Bookings";
+import AppointmentPayment from "./components/Screens/Appointments/AppointmentPayment";
+import Setup from "./components/Screens/Appointments/SetUp";
+import BookingConfiguration from "./components/Screens/Appointments/BookingConfiguration";
+
+// Ticketing
+import TicketingDashboard from "./components/Screens/Ticketing/TicketDashboard";
+import Tickets from "./components/Screens/Ticketing/Ticket";
+import FreshworksSettings from "./components/Screens/Ticketing/FreshworksSettings";
+import TicketDetailPage from "./components/Screens/Ticketing/Components/TicketDetailPage";
+import MasterLayout from "./masterLayout/MasterLayout";
+
 function App() {
-  // const [loading, setLoading] = useState(true);
-
-  // Simulate initial app loading - 2 seconds
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     setLoading(false);
-  //   }, 100); // 2 seconds
-
-  //   return () => clearTimeout(timer);
-  // }, []);
-
-  // if (loading) {
-  //   return (
-  //     <Spinner
-  //       size="large"
-  //       overlay={true}
-  //       text="Initializing Engagenest..."
-  //     />
-  //   );
-  // }
-
   return (
     <SnackbarProvider
       maxSnack={3}
@@ -82,81 +80,103 @@ function App() {
       <BrowserRouter>
         <RouteScrollToTop />
         <Routes>
-          <Route exact path="/" element={<Signin />} />
-          <Route exact path="/signup" element={<Signup />} />
+          {/* Public Routes */}
+          <Route path="/" element={<Signin />} />
+          <Route path="/signup" element={<Signup />} />
+
+          {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
-            <Route exact path="/dashboard" element={<Dashboard />} />
-            <Route exact path="/composemessage" element={<ComposeMessage />} />
-            <Route exact path="/livechat" element={<LiveChat />} />
-            <Route exact path="/chathistory" element={<ChatHistory />} />
-            <Route exact path="/chatagent" element={<ChatAgent />} />
-            <Route exact path="/contact" element={<Contacts />} />
-            <Route exact path="/uicontact" element={<UiContacts />} />
-            <Route exact path="/unsubscribe" element={<Unsubscribe />} />
-            <Route exact path="/managegroups" element={<ManageGroups />} />
-            <Route exact path="/managetemplate" element={<ManageTemplate />} />
-            <Route exact path="/broadcastlogs" element={<BroadcastLogs />} />
-            <Route exact path="/apilogs" element={<ApiLogs />} />
-            <Route exact path="/schedulelogs" element={<SchduledLogs />} />
-            <Route exact path="/billing" element={<Billing />} />
-            <Route exact path="/whatsappflows" element={<WhatsappFlows />} />
-            <Route exact path="/integration" element={<Integration />} />
-            <Route exact path="/payments" element={<Payments />} />
-            <Route exact path="/catalog" element={<Catalog />} />
-            <Route exact path="/orders" element={<Orders />} />
-            <Route
-              exact
-              path="/failovertrigger"
-              element={<FailoverTrigger />}
-            />
-            <Route exact path="/coupons" element={<Coupons />} />
-            <Route exact path="/dialogflow" element={<DialogFlow />} />
-            <Route exact path="/apisettings" element={<ApiSettings />} />
-            <Route exact path="/userattributes" element={<UserAttributes />} />
-            <Route exact path="/qrcode" element={<WhatsAppQRGenerator />} />
-            <Route exact path="/profile" element={<Profile />} />
-            <Route exact path="/automation" element={<ChatbotBuilder />} />
-            <Route exact path="/products" element={<Products />} />
-            <Route
-              exact
-              path="/chatbotflowbuilder"
-              element={<ChatbotFlowBuilder />}
-            />
-            <Route exact path="/subscriptions" element={<Subscriptions />} />
-            <Route
-              exact
-              path="/shopifydescription"
-              element={<ShopifyDescription />}
-            />
-            <Route
-              exact
-              path="/shopifyconfiguration"
-              element={<ShopifyConfiguration />}
-            />
-            <Route exact path="/shopifyflow" element={<ShopifyFlow />} />
-            <Route
-              exact
-              path="/woocommercedescription"
-              element={<WooCommerceDescription />}
-            />
-            <Route
-              exact
-              path="/woocommerceconfiguration"
-              element={<WooCommerceConfiguration />}
-            />
-            <Route
-              exact
-              path="/woocommerceflow"
-              element={<WooCommerceFlow />}
-            />
-            <Route
-              exact
-              path="/webengageconfiguration"
-              element={<WebEngageConfiguration />}
-            />
+            <Route element={<MasterLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/composemessage" element={<ComposeMessage />} />
+              <Route path="/livechat" element={<LiveChat />} />
+              <Route path="/chathistory" element={<ChatHistory />} />
+              <Route path="/chatagent" element={<ChatAgent />} />
+              <Route path="/contact" element={<Contacts />} />
+              <Route path="/uicontact" element={<UiContacts />} />
+              <Route path="/unsubscribe" element={<Unsubscribe />} />
+              <Route path="/managegroups" element={<ManageGroups />} />
+              <Route path="/managetemplate" element={<ManageTemplate />} />
+              <Route path="/broadcastlogs" element={<BroadcastLogs />} />
+              <Route path="/apilogs" element={<ApiLogs />} />
+              <Route path="/leads-dashboard" element={<LeadsDashboard />} />
+              <Route path="/leads" element={<Leads />} />
+              <Route path="/leads-configuration" element={<LeadsSetup />} />
+              <Route
+                path="/appointments-dashboard"
+                element={<AppointmentDashboard />}
+              />
+              <Route path="/bookings" element={<Bookings />} />
+              <Route
+                path="/appointment-payments"
+                element={<AppointmentPayment />}
+              />
+              <Route
+                path="/booking-configuration"
+                element={<BookingConfiguration />}
+              />
+              <Route path="/appointments-configuration" element={<Setup />} />
+              <Route
+                path="/ticketing-dashboard"
+                element={<TicketingDashboard />}
+              />
+
+              {/* ✅ FIXED: Tickets routes - list first, then detail */}
+              <Route path="/tickets" element={<Tickets />} />
+              <Route path="/tickets/:ticketId" element={<TicketDetailPage />} />
+
+              <Route
+                path="/ticketing-configuration"
+                element={<FreshworksSettings />}
+              />
+              <Route path="/schedulelogs" element={<SchduledLogs />} />
+              <Route path="/billing" element={<Billing />} />
+              <Route path="/whatsappflows" element={<WhatsappFlows />} />
+              <Route path="/integration" element={<Integration />} />
+              <Route path="/payments" element={<Payments />} />
+              <Route path="/catalog" element={<Catalog />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/failovertrigger" element={<FailoverTrigger />} />
+              <Route path="/coupons" element={<Coupons />} />
+              <Route path="/dialogflow" element={<DialogFlow />} />
+              <Route path="/apisettings" element={<ApiSettings />} />
+              <Route path="/userattributes" element={<UserAttributes />} />
+              <Route path="/qrcode" element={<WhatsAppQRGenerator />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/automation" element={<ChatbotBuilder />} />
+              <Route path="/products" element={<Products />} />
+              <Route
+                path="/chatbotflowbuilder"
+                element={<ChatbotFlowBuilder />}
+              />
+              <Route path="/subscriptions" element={<Subscriptions />} />
+              <Route
+                path="/shopifydescription"
+                element={<ShopifyDescription />}
+              />
+              <Route
+                path="/shopifyconfiguration"
+                element={<ShopifyConfiguration />}
+              />
+              <Route path="/shopifyflow" element={<ShopifyFlow />} />
+              <Route
+                path="/woocommercedescription"
+                element={<WooCommerceDescription />}
+              />
+              <Route
+                path="/woocommerceconfiguration"
+                element={<WooCommerceConfiguration />}
+              />
+              <Route path="/woocommerceflow" element={<WooCommerceFlow />} />
+              <Route
+                path="/webengageconfiguration"
+                element={<WebEngageConfiguration />}
+              />
+            </Route>
           </Route>
 
-          <Route exact path="*" element={<ErrorLayer />} />
+          {/* 404 - Catch all */}
+          <Route path="*" element={<ErrorLayer />} />
         </Routes>
       </BrowserRouter>
     </SnackbarProvider>

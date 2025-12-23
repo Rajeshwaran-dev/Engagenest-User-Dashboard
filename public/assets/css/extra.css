@@ -195,7 +195,7 @@ table.dataTable td.dt-type-date {
   background-color: #000;
   opacity: 0.65;
   transition: all 0.3s;
-  z-index: 2;
+  z-index: 5;
 }
 
 .overlay.active::after {

@@ -15,12 +15,12 @@ const WhatsAppQRGenerator = () => {
   const [editingId, setEditingId] = useState(null);
   const [editMessage, setEditMessage] = useState("");
   const [copiedId, setCopiedId] = useState(null);
-  
+
   // Modal states
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedQr, setSelectedQr] = useState(null);
-  
+
   const qrRef = useRef(null);
 
   const handleGenerateQR = () => {
@@ -156,7 +156,7 @@ const WhatsAppQRGenerator = () => {
 
   const handleSaveEdit = () => {
     if (!selectedQr) return;
-    
+
     setQrHistory((prev) =>
       prev.map((qr) => (qr.id === selectedQr.id ? { ...qr, message: editMessage } : qr))
     );
@@ -180,7 +180,7 @@ const WhatsAppQRGenerator = () => {
 
   const confirmDelete = () => {
     if (!selectedQr) return;
-    
+
     setQrHistory((prev) => prev.filter((qr) => qr.id !== selectedQr.id));
     setShowDeleteModal(false);
     setSelectedQr(null);
@@ -228,9 +228,9 @@ const WhatsAppQRGenerator = () => {
   };
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="QR Code" />
-      
+
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="modal-backdrop show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -244,16 +244,16 @@ const WhatsAppQRGenerator = () => {
                   <p>Are you sure you want to delete this QR code?</p>
                 </div>
                 <div className="modal-footer">
-                  <button 
-                    type="button" 
-                    className="btn-secondary" 
+                  <button
+                    type="button"
+                    className="btn-secondary"
                     onClick={cancelDelete}
                   >
                     No
                   </button>
-                  <button 
-                    type="button" 
-                    className="btn-primary" 
+                  <button
+                    type="button"
+                    className="btn-primary"
                     onClick={confirmDelete}
                   >
                     Yes
@@ -287,16 +287,16 @@ const WhatsAppQRGenerator = () => {
                   </div>
                 </div>
                 <div className="modal-footer">
-                  <button 
-                    type="button" 
-                    className="btn btn-secondary" 
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
                     onClick={handleCancelEdit}
                   >
                     Cancel
                   </button>
-                  <button 
-                    type="button" 
-                    className="btn btn-primary" 
+                  <button
+                    type="button"
+                    className="btn btn-primary"
                     onClick={handleSaveEdit}
                     disabled={!editMessage.trim()}
                   >
@@ -558,7 +558,7 @@ const WhatsAppQRGenerator = () => {
           </div>
         </div>
       </div>
-    </MasterLayout>
+    </>
   );
 };
 

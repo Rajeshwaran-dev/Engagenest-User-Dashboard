@@ -5,7 +5,7 @@ import Breadcrumb from "../../Breadcrumb";
 
 const Integration = () => {
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Integrations Hub" />
       <div className="row">
         {/* Shopify Card */}
@@ -139,7 +139,7 @@ const Integration = () => {
           </div>
         </div>
       </div>
-    </MasterLayout>
+    </>
   );
 };
 

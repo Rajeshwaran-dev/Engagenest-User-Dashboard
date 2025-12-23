@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 const Description = () => {
   const navigate = useNavigate();
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="ERP Integration" />
       <div className="d-flex align-items-center gap-3" style={{ marginBottom: "20px" }}>
         <button
@@ -33,7 +33,7 @@ const Description = () => {
         sizes. WooCommerce is especially appealing for those seeking a
         self-hosted solution with full control over their e-commerce operations.
       </p>
-    </MasterLayout>
+    </>
   );
 };
 

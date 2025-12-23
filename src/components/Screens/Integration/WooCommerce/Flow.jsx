@@ -36,22 +36,22 @@ const Flow = () => {
   ];
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Woocommerce" />
       <div className="flow-container">
         <div className="flow-content">
           <div className="d-flex align-items-center gap-3" style={{ marginBottom: "20px" }}>
-        <button
-          className="btn-primary d-flex align-items-center gap-2"
-          onClick={() => navigate("/integration")}
-        >
-          <Icon
-            style={{ fontSize: "20px" }}
-            icon="typcn:arrow-left-outline"
-          />
-          Back
-        </button>
-      </div>
+            <button
+              className="btn-primary d-flex align-items-center gap-2"
+              onClick={() => navigate("/integration")}
+            >
+              <Icon
+                style={{ fontSize: "20px" }}
+                icon="typcn:arrow-left-outline"
+              />
+              Back
+            </button>
+          </div>
           {/* Flow Cards Grid */}
           <div className="flow-grid">
             {flowCards.map((card, index) => (
@@ -97,7 +97,7 @@ const Flow = () => {
           </div>
         </div>
       </div>
-    </MasterLayout>
+    </>
   );
 };
 

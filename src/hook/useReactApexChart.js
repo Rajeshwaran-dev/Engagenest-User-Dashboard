@@ -1,5 +1,4 @@
 const useReactApexChart = () => {
-  // Always provide NON-NULL categories
   const categories = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   const zoomAbleLineChartSeries = [
@@ -72,9 +71,51 @@ const useReactApexChart = () => {
     },
   };
 
+  let multipleSeriesChartSeries = [20, 22, 28, 10, 25, 20];
+  let multipleSeriesChartOptions = {
+    chart: {
+      type: "polarArea",
+      height: 264,
+    },
+    labels: ["New Lead", "Hot", "Warm", "Cold", "Converted", "Invalid"],
+    colors: ["#487FFF", "#FF9F29", "#9935FE", "#EF4A00", "#211f60", "var(--primary)"],
+    stroke: {
+      colors: [
+        "#487FFF",
+        "#FF9F29",
+        "#9935FE",
+        "#EF4A00",
+        "#211f60",
+        "var(--primary)",
+      ],
+    },
+    fill: {
+      opacity: 0.8,
+    },
+    legend: {
+      position: "bottom",
+      horizontalAlign: "center", // Align the legend horizontally
+    },
+    responsive: [
+      {
+        breakpoint: 480,
+        options: {
+          chart: {
+            width: 200,
+          },
+          legend: {
+            position: "bottom",
+          },
+        },
+      },
+    ],
+  };
+
   return {
     zoomAbleLineChartOptions,
     zoomAbleLineChartSeries,
+    multipleSeriesChartOptions,
+    multipleSeriesChartSeries,
     categories,
   };
 };

@@ -11,7 +11,7 @@ const Products = () => {
   const [showModal, setShowModal] = useState(false);
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Products" />
       <div className="d-flex justify-content-between align-items-center mb-4 p-12">
         <div className="d-flex align-items-center gap-3">
@@ -192,9 +192,8 @@ const Products = () => {
           </div>
         </div>
       </div>
-
       <AddProductModal showModal={showModal} setShowModal={setShowModal} />
-    </MasterLayout>
+    </>
   );
 };
 

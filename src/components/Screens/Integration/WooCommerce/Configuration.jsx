@@ -116,7 +116,7 @@ const Configuration = () => {
   };
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Woocommerce" />
       <div className="configuration-container">
 
@@ -281,7 +281,7 @@ const Configuration = () => {
           </div>
         </div>
       </div>
-    </MasterLayout>
+    </>
   );
 };
 

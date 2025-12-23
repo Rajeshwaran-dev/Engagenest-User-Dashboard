@@ -184,7 +184,7 @@ const Coupons = () => {
   };
 
   return (
-    <MasterLayout>
+    <>
       <Breadcrumb title="Coupons" />
 
       {/* CREATE COUPON FORM */}
@@ -345,8 +345,8 @@ const Coupons = () => {
                           : "Discount amount"}
                         <span className="text-danger">*</span>
                         <div className="position-relative d-inline-block ms-2">
-                          <button 
-                            type="button" 
+                          <button
+                            type="button"
                             className="btn-link p-0 d-flex align-items-center"
                             onMouseEnter={() => setActiveTooltip('discountAmount')}
                             onMouseLeave={() => setActiveTooltip(null)}
@@ -370,7 +370,7 @@ const Coupons = () => {
                                 transform: "translateX(-50%)",
                                 marginBottom: "10px"
                               }}>
-                              <div className="tooltip-arrow position-absolute" 
+                              <div className="tooltip-arrow position-absolute"
                                 style={{
                                   top: "100%",
                                   left: "50%",
@@ -405,8 +405,8 @@ const Coupons = () => {
                       <label className="form-label color-change fw-semibold d-flex align-items-center">
                         Coupon expiry date
                         <div className="position-relative d-inline-block ms-2">
-                          <button 
-                            type="button" 
+                          <button
+                            type="button"
                             className="btn-link p-0 d-flex align-items-center"
                             onMouseEnter={() => setActiveTooltip('expiryDate')}
                             onMouseLeave={() => setActiveTooltip(null)}
@@ -430,7 +430,7 @@ const Coupons = () => {
                                 transform: "translateX(-50%)",
                                 marginBottom: "10px"
                               }}>
-                              <div className="tooltip-arrow position-absolute" 
+                              <div className="tooltip-arrow position-absolute"
                                 style={{
                                   top: "100%",
                                   left: "50%",
@@ -467,8 +467,8 @@ const Coupons = () => {
                         <label className="form-label color-change fw-semibold d-flex align-items-center">
                           Minimum spend
                           <div className="position-relative d-inline-block ms-2">
-                            <button 
-                              type="button" 
+                            <button
+                              type="button"
                               className="btn-link p-0 d-flex align-items-center"
                               onMouseEnter={() => setActiveTooltip('minimumSpend')}
                               onMouseLeave={() => setActiveTooltip(null)}
@@ -492,7 +492,7 @@ const Coupons = () => {
                                   transform: "translateX(-50%)",
                                   marginBottom: "10px"
                                 }}>
-                                <div className="tooltip-arrow position-absolute" 
+                                <div className="tooltip-arrow position-absolute"
                                   style={{
                                     top: "100%",
                                     left: "50%",
@@ -521,8 +521,8 @@ const Coupons = () => {
                         <label className="form-label color-change fw-semibold d-flex align-items-center">
                           Maximum spend
                           <div className="position-relative d-inline-block ms-2">
-                            <button 
-                              type="button" 
+                            <button
+                              type="button"
                               className="btn-link p-0 d-flex align-items-center"
                               onMouseEnter={() => setActiveTooltip('maximumSpend')}
                               onMouseLeave={() => setActiveTooltip(null)}
@@ -546,7 +546,7 @@ const Coupons = () => {
                                   transform: "translateX(-50%)",
                                   marginBottom: "10px"
                                 }}>
-                                <div className="tooltip-arrow position-absolute" 
+                                <div className="tooltip-arrow position-absolute"
                                   style={{
                                     top: "100%",
                                     left: "50%",
@@ -586,8 +586,8 @@ const Coupons = () => {
                         <label className="form-label color-change fw-semibold d-flex align-items-center">
                           Usage limit per coupon
                           <div className="position-relative d-inline-block ms-2">
-                            <button 
-                              type="button" 
+                            <button
+                              type="button"
                               className="btn-link p-0 d-flex align-items-center"
                               onMouseEnter={() => setActiveTooltip('usageLimitPerCoupon')}
                               onMouseLeave={() => setActiveTooltip(null)}
@@ -611,7 +611,7 @@ const Coupons = () => {
                                   transform: "translateX(-50%)",
                                   marginBottom: "10px"
                                 }}>
-                                <div className="tooltip-arrow position-absolute" 
+                                <div className="tooltip-arrow position-absolute"
                                   style={{
                                     top: "100%",
                                     left: "50%",
@@ -642,8 +642,8 @@ const Coupons = () => {
                         <label className="form-label color-change fw-semibold d-flex align-items-center">
                           Usage limit per user
                           <div className="position-relative d-inline-block ms-2">
-                            <button 
-                              type="button" 
+                            <button
+                              type="button"
                               className="btn-link p-0 d-flex align-items-center"
                               onMouseEnter={() => setActiveTooltip('usageLimitPerUser')}
                               onMouseLeave={() => setActiveTooltip(null)}
@@ -667,7 +667,7 @@ const Coupons = () => {
                                   transform: "translateX(-50%)",
                                   marginBottom: "10px"
                                 }}>
-                                <div className="tooltip-arrow position-absolute" 
+                                <div className="tooltip-arrow position-absolute"
                                   style={{
                                     top: "100%",
                                     left: "50%",
@@ -866,7 +866,9 @@ const Coupons = () => {
           </div>
         </div>
       )}
-    </MasterLayout>
+    </>
+
+
   );
 };
 
