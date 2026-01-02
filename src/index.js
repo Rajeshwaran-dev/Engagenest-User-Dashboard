@@ -15,7 +15,6 @@ root.render(
   <>
     <Provider store={store}>
       <App />
-      <script type="module" src="/src/index.js"></script>
     </Provider>
   </>
 );
