@@ -41,6 +41,8 @@ const ProtectedRoute = () => {
 
   if (!authChecked) return null; // prevents flash of dashboard before redirect
 
+  console.log("ProtectedRoute rendering for path:", location.pathname, "Authenticated:", isAuthenticated);
+
   return isAuthenticated ? (
     <Outlet />
   ) : (

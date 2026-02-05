@@ -562,7 +562,7 @@ const TicketDetailPage = ({ selectedTicket: propTicket, isModalView = false, onC
     ],
   };
 
-  // Static tickets data
+  // Static tickets data - Moved outside component for consistency
   const staticTickets = [
     {
       _id: "1",
@@ -579,6 +579,16 @@ const TicketDetailPage = ({ selectedTicket: propTicket, isModalView = false, onC
       isSpam: false,
       isStarred: true,
       dueDate: "2024-01-20T10:30:00Z",
+      slaTracking: {
+        resolutionTime: 48,
+        resolutionTimeUnit: "hours",
+        firstResponseTime: 15,
+        firstResponseTimeUnit: "minutes",
+        firstResponseDue: "2024-01-15T10:45:00Z",
+        firstResponseMet: false,
+        timerStartedAt: "2024-01-15T10:30:00Z",
+        isTimerPaused: false,
+      }
     },
     {
       _id: "2",
@@ -595,6 +605,16 @@ const TicketDetailPage = ({ selectedTicket: propTicket, isModalView = false, onC
       isSpam: false,
       isStarred: false,
       dueDate: "2024-01-25T14:45:00Z",
+      slaTracking: {
+        resolutionTime: 72,
+        resolutionTimeUnit: "hours",
+        firstResponseTime: 60,
+        firstResponseTimeUnit: "minutes",
+        firstResponseDue: "2024-01-16T15:45:00Z",
+        firstResponseMet: true,
+        timerStartedAt: "2024-01-16T14:45:00Z",
+        isTimerPaused: false,
+      }
     },
     {
       _id: "3",
@@ -642,6 +662,17 @@ const TicketDetailPage = ({ selectedTicket: propTicket, isModalView = false, onC
       isSpam: false,
       isStarred: false,
       dueDate: "2024-01-23T13:10:00Z",
+      slaTracking: {
+        resolutionTime: 48,
+        resolutionTimeUnit: "hours",
+        firstResponseTime: 15,
+        firstResponseTimeUnit: "minutes",
+        firstResponseDue: "2024-01-18T13:25:00Z",
+        firstResponseMet: true,
+        timerStartedAt: "2024-01-18T13:10:00Z",
+        isTimerPaused: true,
+        remainingBalanceTime: 86400000, // 24 hours in ms
+      }
     },
     {
       _id: "6",
@@ -658,19 +689,85 @@ const TicketDetailPage = ({ selectedTicket: propTicket, isModalView = false, onC
       isSpam: false,
       isStarred: false,
       dueDate: "2024-01-26T16:05:00Z",
+      slaTracking: {
+        resolutionTime: 72,
+        resolutionTimeUnit: "hours",
+        firstResponseTime: 60,
+        firstResponseTimeUnit: "minutes",
+        firstResponseDue: "2024-01-19T17:05:00Z",
+        firstResponseMet: false,
+        timerStartedAt: "2024-01-19T16:05:00Z",
+        isTimerPaused: false,
+      }
     },
   ];
 
 
+  // ✅ FIXED: Get ticket based on route parameter - Using state to manage updates
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [ticketIdParam, setTicketIdParam] = useState(ticketId);
 
-  // Static selected ticket data
-  const selectedTicket = staticTickets.find(t => String(t._id) === String(ticketId));
+  // ✅ FIXED: Update selected ticket when route parameter changes
+  useEffect(() => {
+    if (ticketId) {
+      setTicketIdParam(ticketId);
+      const ticket = staticTickets.find(t => String(t._id) === String(ticketId));
+      setSelectedTicket(ticket || null);
+      
+      // Reset communications when ticket changes
+      if (ticket) {
+        const initialComms = (ticket.replies || []).map(reply => ({
+          id: reply.id || reply._id,
+          type: reply.type || "agent",
+          author: reply.author || ticket.assignedTo || "Unassigned",
+          timestamp:
+            reply.timestamp || reply.createdAt || new Date().toISOString(),
+          content: reply.content,
+          videoUrl: reply.videoUrl || null,
+          isVideoNote: !!reply.videoUrl,
+        }));
+
+        // Add the initial ticket description as customer communication
+        if (ticket.description) {
+          initialComms.unshift({
+            id: "initial",
+            type: "customer",
+            author: ticket.customerName,
+            timestamp: ticket.createdDate || new Date().toISOString(),
+            content: ticket.description,
+            isInitial: true,
+          });
+        }
+
+        setCommunications(initialComms);
+        setSelectedStatus(ticket.status || "");
+        
+        setEditedProperties({
+          status: ticket.status,
+          priority: ticket.priority,
+          department: ticket.department,
+          assignedTo: ticket.assignedTo,
+          category: ticket.category || "",
+          source: ticket.source || "",
+          type: ticket.type || "",
+          company: ticket.company || "",
+        });
+        
+        // Set contact data
+        setSelectedContactData({ number: ticket.mobileNumber });
+        setChatData({ [ticket.mobileNumber]: currentChatData?.data });
+      }
+    }
+  }, [ticketId]); // ✅ Added dependency on ticketId
 
   // ✅ FIXED: Add back button for route-based view
-  // const handleBack = () => {
-
-  //     navigate('/tickets')
-  // };
+  const handleBack = () => {
+    if (isModalView && onClose) {
+      onClose();
+    } else {
+      navigate('/tickets');
+    }
+  };
 
   // Static personal notes data
   const staticPersonalNotes = [
@@ -1277,69 +1374,12 @@ const TicketDetailPage = ({ selectedTicket: propTicket, isModalView = false, onC
   const formattedTime = `${formattedHours}.${formattedMinutes}${ampm}`;
   const readableTimestamp = `${formattedDate} ${formattedTime}`;
 
-  useEffect(() => {
-    if (selectedTicket) {
-      setSelectedContactData({ number: selectedTicket.mobileNumber });
-    }
-  }, [selectedTicket]);
-
-  useEffect(() => {
-    setChatData({ [selectedContactData?.number]: currentChatData?.data });
-  }, [currentChatData]);
-
   // Log ticket view on component mount
   useEffect(() => {
     if (selectedTicket?._id) {
       logTicketView(selectedTicket._id);
     }
   }, [selectedTicket?._id]);
-
-  useEffect(() => {
-    if (selectedTicket && Object.keys(selectedTicket).length > 0) {
-      setSelectedStatus(selectedTicket.status || "");
-
-      // Initialize communications from ticket data
-      const initialComms = (selectedTicket.replies || []).map(reply => ({
-        id: reply.id || reply._id,
-        type: reply.type || "agent",
-        author: reply.author || selectedTicket.assignedTo || "Unassigned",
-        timestamp:
-          reply.timestamp || reply.createdAt || new Date().toISOString(),
-        content: reply.content,
-        videoUrl: reply.videoUrl || null,
-        isVideoNote: !!reply.videoUrl,
-      }));
-
-      // Add the initial ticket description as customer communication
-      if (selectedTicket.description) {
-        initialComms.unshift({
-          id: "initial",
-          type: "customer",
-          author: selectedTicket.customerName,
-          timestamp: selectedTicket.createdDate || new Date().toISOString(),
-          content: selectedTicket.description,
-          isInitial: true,
-        });
-      }
-
-      setCommunications(initialComms);
-    }
-  }, [selectedTicket]);
-
-  useEffect(() => {
-    if (selectedTicket && Object.keys(selectedTicket).length > 0) {
-      setEditedProperties({
-        status: selectedTicket.status,
-        priority: selectedTicket.priority,
-        department: selectedTicket.department,
-        assignedTo: selectedTicket.assignedTo,
-        category: selectedTicket.category || "",
-        source: selectedTicket.source || "",
-        type: selectedTicket.type || "",
-        company: selectedTicket.company || "",
-      });
-    }
-  }, [selectedTicket]);
 
   useEffect(() => {
     if (
@@ -2089,7 +2129,7 @@ const TicketDetailPage = ({ selectedTicket: propTicket, isModalView = false, onC
       <div style={{ padding: "40px", textAlign: "center" }}>
         <h2>Ticket Not Found</h2>
         <p>The requested ticket could not be located.</p>
-        <Button type="primary" onClick={() => navigate("/tickets")}>
+        <Button type="primary" onClick={() => navigate("/dashboard")}>
           Back to Tickets
         </Button>
       </div>
@@ -2133,7 +2173,7 @@ const TicketDetailPage = ({ selectedTicket: propTicket, isModalView = false, onC
                 <Button
                   type="text"
                   icon={<ArrowLeftOutlined />}
-                  onClick={() => navigate("/tickets")}
+                  onClick={handleBack}
                   style={{ marginRight: 8 }}
                 >
                   Back
@@ -4532,10 +4572,10 @@ const TicketDetailPage = ({ selectedTicket: propTicket, isModalView = false, onC
                                             }))}
                                           />
                                         ),
-                                      },
-                                    ]}
-                                  />
-                                )}
+                                    },
+                                  ]}
+                                />
+                              )}
 
                               {/* Note Details */}
                               {isNote && log.details && (

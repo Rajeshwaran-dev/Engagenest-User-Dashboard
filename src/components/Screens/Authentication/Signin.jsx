@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import partners from "../../../assets/images/partners.svg";
+import mainLogo from "../../../assets/images/auth-logo.jpg";
 import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { useDispatch } from 'react-redux';
@@ -712,14 +714,22 @@ const Signin = () => {
       <section className="auth bg-base d-flex flex-wrap">
         <div className="auth-left d-lg-block d-none">
           <div className="d-flex align-items-center flex-column h-100 justify-content-center">
-            <img src="assets/images/partners.svg" alt="" />
+            <img
+              src={partners}
+              alt="side logo"
+              className="light-logo"
+            />
           </div>
         </div>
         <div className="auth-right py-32 px-24 d-flex flex-column justify-content-center bg-white">
           <div className="max-w-464-px mx-auto w-100">
             <div className="text-center">
               <Link to="/" >
-                <img className="w-100 h-custom-px" src="assets/images/logo.png" alt="" />
+                <img
+                  className="w-100 h-custom-px"
+                  src={mainLogo}
+                  alt="side logo"
+                />
               </Link>
               <h5 className="mb-24 mt-8 text-xl text-start">Welcome Back! 👋</h5>
             </div>

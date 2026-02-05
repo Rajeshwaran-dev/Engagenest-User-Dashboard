@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import React, { useState, useEffect } from "react";
-import MasterLayout from "../../../masterLayout/MasterLayout";
+import mainLogo from "../../../assets/images/auth-logo.jpg";
 import Breadcrumb from "../../Breadcrumb";
 import ProfileEditModal from "./Modules/ProfileEditModal";
 import RenewModal from "../Subscriptions/Modules/RenewModal";
@@ -120,7 +120,7 @@ const Profile = () => {
       about: profileData?.whatsappAbout || "Not specified",
       description: profileData?.description || "Not specified",
       address: userDetails?.data?.Address || "Not specified",
-      logo: profileData?.whatsAppDisplayImage || "assets/images/logo.png",
+      logo: profileData?.whatsAppDisplayImage || mainLogo,
     },
     account: {
       status: userDetails?.data?.suspend ? "Suspended" : "Active",

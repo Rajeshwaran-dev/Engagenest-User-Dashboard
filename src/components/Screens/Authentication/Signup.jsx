@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import features from "../../../assets/images/features.svg";
+import mainLogo from "../../../assets/images/auth-logo.jpg";
 import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import CryptoJS from 'crypto-js';
@@ -505,14 +507,22 @@ const Signup = () => {
       <section className="auth bg-base d-flex flex-wrap">
         <div className="auth-left d-lg-block d-none">
           <div className="d-flex align-items-center flex-column h-100 justify-content-center">
-            <img src="assets/images/features.svg" alt="" />
+            <img
+              src={features}
+              alt="site logo"
+              className="light-logo"
+            />
           </div>
         </div>
         <div className="auth-right py-32 px-24 d-flex flex-column justify-content-center">
           <div className="max-w-464-px mx-auto w-100">
             <div className="text-center">
               <Link to="/" >
-                <img className="w-100 h-custom-px" src="assets/images/logo.png" alt="" />
+              <img
+              src={mainLogo}
+              alt="site logo"
+              className="w-100 h-custom-px"
+            />
               </Link>
               <h5 className="mb-24 mt-8 text-xl text-start">Create, Automate, and Engage 🚀</h5>
             </div>

@@ -2,7 +2,6 @@ import { BrowserRouter } from "react-router-dom";
 import { SnackbarProvider } from "notistack";
 import RouteScrollToTop from "./helper/RouteScrollToTop";
 import AppRoutes from "./routes";
-import { TicketProvider } from "./context/TicketContext";
 
 function App() {
   return (
@@ -11,10 +10,8 @@ function App() {
       anchorOrigin={{ vertical: "top", horizontal: "right" }}
     >
       <BrowserRouter>
-        <TicketProvider>
-          <RouteScrollToTop />
-          <AppRoutes />
-        </TicketProvider>
+        <RouteScrollToTop />
+        <AppRoutes />
       </BrowserRouter>
     </SnackbarProvider>
   );

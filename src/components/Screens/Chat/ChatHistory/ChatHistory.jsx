@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import chatUser from "../../../../assets/images/chat/1.png";
 import { Filter, Search } from "feather-icons-react";
 import MasterLayout from "../../../../masterLayout/MasterLayout";
 import Breadcrumb from "../../../Breadcrumb";
@@ -542,7 +543,7 @@ const ChatHistory = () => {
                 style={{ cursor: "pointer" }}
               >
                 <div className="img">
-                  <img src="assets/images/chat/1.png" alt="chat_user" />
+                  <img src={chatUser} alt="chat_user" />
                 </div>
                 <div className="info">
                   <h6 className="text-sm mb-1">{chat.phone}</h6>
@@ -571,7 +572,7 @@ const ChatHistory = () => {
               {/* Chat header (MODIFIED) */}
               <div className="chat-sidebar-single active border-bottom pb-3">
                 <div className="img">
-                  <img src="assets/images/chat/1.png" alt="chat_user" />
+                  <img src={chatUser} alt="chat_user" />
                 </div>
 
                 {/* Chat Header Content with Search */}
@@ -687,7 +688,7 @@ const ChatHistory = () => {
                     >
                       {message.type === "left" && (
                         <img
-                          src="assets/images/chat/1.png"
+                          src={chatUser}
                           alt="image_icon"
                           className="avatar-lg object-fit-cover rounded-circle"
                         />

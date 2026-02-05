@@ -1,5 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import mainLogo from "../assets/images/main-logo.png";
+import darkLogo from "../assets/images/dark-logo.png";
+import logoIcon from "../assets/images/logo.png";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import ThemeToggleButton from "../helper/ThemeToggleButton";
 import { Outlet, useNavigate } from "react-router-dom";
@@ -157,17 +160,17 @@ const MasterLayout = ({ children }) => {
         <div>
           <Link to="/dashboard" className="sidebar-logo">
             <img
-              src="/assets/images/main-logo.png"
+              src={mainLogo}
               alt="site logo"
               className="light-logo"
             />
             <img
-              src="/assets/images/dark-logo.png"
+              src={darkLogo}
               alt="site logo"
               className="dark-logo"
             />
             <img
-              src="/assets/images/logo.png"
+              src={logoIcon}
               alt="site logo"
               className="logo-icon"
             />
@@ -785,7 +788,7 @@ const MasterLayout = ({ children }) => {
                       Engagenest
                     </h6>
                     <img
-                      src="/assets/images/logo.png"
+                      src={logoIcon}
                       alt="image_user"
                       className="w-40-px h-40-px object-fit-cover rounded-circle"
                     />
@@ -847,6 +850,7 @@ const MasterLayout = ({ children }) => {
         </div>
 
         <div className="dashboard-main-body">
+          {console.log("MasterLayout rendering for path:", location.pathname)}
           {isTransitioning && (
             <div style={{
               position: 'fixed',
@@ -860,8 +864,8 @@ const MasterLayout = ({ children }) => {
             }} />
           )}
 
-          {/* ✅ CRITICAL FIX: Use Outlet for nested routes */}
-          <Outlet />
+          {/* ✅ FIXED: Render children if provided (for wrappers) or Outlet (for routes) */}
+          {children || <Outlet />}
         </div>
         <footer className="d-footer"></footer>
       </main>

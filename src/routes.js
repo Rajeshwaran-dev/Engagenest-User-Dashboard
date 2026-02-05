@@ -64,13 +64,13 @@ import TicketDetailPage from "./components/Screens/Ticketing/Components/TicketDe
 const AppRoutes = () => (
   <Routes>
     {/* Public Routes */}
-    {/* <Route path="/" element={<Signin />} /> */}
+    <Route path="/" element={<Signin />} />
     <Route path="/signup" element={<Signup />} />
 
     {/* Protected Routes */}
     <Route element={<ProtectedRoute />}>
       <Route element={<MasterLayout />}>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/composemessage" element={<ComposeMessage />} />
         <Route path="/livechat" element={<LiveChat />} />
         <Route path="/chathistory" element={<ChatHistory />} />

@@ -1,5 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import shopifyImg from "../../../assets/images/shopify.png";
+import webengageImg from "../../../assets/images/webengage.png";
+import wooCommerceImg from "../../../assets/images/woo-commerce.png";
 import MasterLayout from "../../../masterLayout/MasterLayout";
 import Breadcrumb from "../../Breadcrumb";
 
@@ -19,7 +22,7 @@ const Integration = () => {
                   style={{ minHeight: "200px", cursor: "pointer" }}
                 >
                   <img
-                    src="assets/images/shopify.png"
+                    src={shopifyImg}
                     alt="Shopify"
                     className="img-fluid"
                     style={{ maxWidth: "200px", maxHeight: "120px" }}
@@ -66,7 +69,7 @@ const Integration = () => {
                   style={{ minHeight: "200px", cursor: "pointer" }}
                 >
                   <img
-                    src="assets/images/woo-commerce.png"
+                    src={wooCommerceImg}
                     alt="WooCommerce"
                     className="img-fluid"
                     style={{ maxWidth: "200px", maxHeight: "120px" }}
@@ -113,8 +116,8 @@ const Integration = () => {
                   style={{ minHeight: "200px", cursor: "pointer" }}
                 >
                   <img
-                    src="assets/images/webengage.png"
-                    alt="WooCommerce"
+                    src={webengageImg}
+                    alt="webengage"
                     className="img-fluid"
                     style={{ maxWidth: "200px", maxHeight: "120px" }}
                   />

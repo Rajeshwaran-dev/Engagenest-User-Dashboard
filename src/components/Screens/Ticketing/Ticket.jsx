@@ -124,7 +124,9 @@ const Tickets = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Tickets state
+  console.log("Tickets component rendering for path:", location.pathname);
+
+  // ✅ FIXED: Navigate to ticket detail page using route
   const [tickets, setTickets] = useState(STATIC_TICKETS);
   const [spamTickets, setSpamTickets] = useState(STATIC_SPAM_TICKETS);
   const [starredTickets, setStarredTickets] = useState(STATIC_STARRED_TICKETS);
@@ -137,7 +139,7 @@ const Tickets = () => {
 
   // ✅ FIXED: Navigate to ticket detail page using route
   const handleRowClick = (ticket) => {
-    // Navigate to the ticket detail page with the ticket ID
+    // Use navigate with proper path
     navigate(`/tickets/${ticket._id}`);
   };
 

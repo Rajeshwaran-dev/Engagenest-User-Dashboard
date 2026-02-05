@@ -11925,7 +11925,6 @@ select option {
 
 #previewImage1,
 #previewImage2 {
-  background-image: url("../images/payment/upload-image.png");
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
@@ -13195,7 +13194,7 @@ td.fc-header-center {
 /* === NFT end === */
 /* === trail card start === */
 .trail-bg {
-  background-image: url("../images/home-nine/trail-bg.jpg");
+  /* background-image: url("../images/home-nine/trail-bg.jpg"); */
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center center;
@@ -14990,7 +14989,7 @@ html[data-theme="dark"] .dark-bg-neutral-200 {
 }
 
 [data-theme="dark"] .btn-close {
-  background-image: url(../images/times.png);
+  /* background-image: url(../images/times.png); */
   background-size: auto;
   background-repeat: no-repeat;
   opacity: 1;
